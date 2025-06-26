@@ -1,0 +1,50 @@
+.accent-color{
+    -fx-background-color: #3b4ef7;
+}
+.white-color{
+    -fx-text-fill: white;
+}
+
+.h1{
+    -fx-font-size: 45px;
+}
+.create-acc-btn{
+    -fx-font-size: 20px;
+    -fx-text-fill: white;
+    -fx-background-color: transparent;
+    -fx-background-radius: 5px;
+}
+
+.create-acc-btn:hover{
+    -fx-background-color: #596bf6;
+    -fx-cursor: hand;
+}
+
+.login-input{
+    -fx-pref-width: 430px;
+    -fx-arc-height: 60px;
+    -fx-border-color: #3b4ef7;
+    -fx-border-radius:  5px;
+    -fx-background-radius:  5px;
+}
+.login-btn{
+    -fx-background-color: #3b4ef7;
+    -fx-background-radius: 5px;
+    -fx-font-size: 20px;
+    -fx-text-fill: white;
+}
+.login-btn:hover{
+    -fx-background-color: #596bf6;
+    -fx-cursor: hand;
+}
+
+.contact-list{
+    -fx-border-color:  transparent #3b4ef7 transparent transparent ;
+    -fx-border-width: 2px;
+}
+.search-input{
+  -fx-border-width: none;
+    -fx-background-color: transparent;
+    -fx-text-fill: white;
+    -fx-font-size: 16px;
+}

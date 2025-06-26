@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="1000.0" stylesheets="@../styles/style.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <VBox layoutX="-4.0" layoutY="-2.0" prefHeight="610.0" prefWidth="347.0" styleClass="contact-list">
+         <children>
+            <HBox alignment="CENTER" prefHeight="57.0" prefWidth="342.0" style="-fx-spacing: 5;" styleClass="accent-color">
+               <children>
+                  <ImageView fitHeight="27.0" fitWidth="27.0" style="-fx-opacity: 0.5;">
+                     <image>
+                        <Image url="@../icons/icons8-search-40.png" />
+                     </image>
+                  </ImageView>
+                  <TextField prefHeight="46.0" prefWidth="283.0" promptText="Search Contact" styleClass="search-input" />
+               </children>
+            </HBox>
+            <ScrollPane prefHeight="541.0" prefWidth="342.0">
+               <content>
+                  <VBox prefHeight="531.0" prefWidth="333.0">
+                     <children>
+                        <HBox alignment="CENTER" prefHeight="72.0" prefWidth="334.0">
+                           <children>
+                              <ImageView fitHeight="50.0" fitWidth="55.0">
+                                 <image>
+                                    <Image url="@../icons/icons8-avatar-80.png" />
+                                 </image>
+                              </ImageView>
+                              <VBox prefHeight="100.0" prefWidth="231.0">
+                                 <children>
+                                    <Label alignment="CENTER" prefHeight="35.0" prefWidth="131.0" text="Tafsif Al nafin">
+                                       <font>
+                                          <Font name="System Bold" size="16.0" />
+                                       </font>
+                                       <VBox.margin>
+                                          <Insets top="8.0" />
+                                       </VBox.margin>
+                                    </Label>
+                                    <Label alignment="TOP_LEFT" prefHeight="18.0" prefWidth="227.0" text="Latest message">
+                                       <padding>
+                                          <Insets left="15.0" />
+                                       </padding>
+                                    </Label>
+                                 </children>
+                              </VBox>
+                           </children>
+                        </HBox>
+                        <Separator prefWidth="200.0" />
+                        <HBox alignment="CENTER" prefHeight="72.0" prefWidth="334.0">
+                           <children>
+                              <ImageView fitHeight="50.0" fitWidth="55.0">
+                                 <image>
+                                    <Image url="@../icons/icons8-avatar-80.png" />
+                                 </image>
+                              </ImageView>
+                              <VBox prefHeight="100.0" prefWidth="231.0">
+                                 <children>
+                                    <Label alignment="CENTER" prefHeight="35.0" prefWidth="131.0" text="Hasibul Hasan">
+                                       <font>
+                                          <Font name="System Bold" size="16.0" />
+                                       </font>
+                                       <VBox.margin>
+                                          <Insets top="8.0" />
+                                       </VBox.margin>
+                                    </Label>
+                                    <Label alignment="TOP_LEFT" prefHeight="18.0" prefWidth="227.0" text="Latest message">
+                                       <padding>
+                                          <Insets left="15.0" />
+                                       </padding>
+                                    </Label>
+                                 </children>
+                              </VBox>
+                           </children>
+                        </HBox>
+                     </children>
+                  </VBox>
+               </content>
+            </ScrollPane>
+         </children>
+      </VBox>
+      <HBox layoutX="341.0" layoutY="545.0" prefHeight="58.0" prefWidth="662.0" style="-fx-background-color: #3b4ef7;" />
+      <HBox alignment="CENTER_LEFT" layoutX="343.0" prefHeight="58.0" prefWidth="662.0" style="-fx-background-color: #3b4ef7;">
+         <children>
+            <HBox alignment="CENTER" prefHeight="58.0" prefWidth="212.0">
+               <children>
+                  <ImageView fitHeight="34.0" fitWidth="37.0">
+                     <image>
+                        <Image url="@../icons/icons8-avatar-80.png" />
+                     </image>
+                  </ImageView>
+                  <Label alignment="CENTER" prefHeight="25.0" prefWidth="131.0" text="Tafsif Al nafin" textFill="WHITE">
+                     <font>
+                        <Font name="System Bold" size="16.0" />
+                     </font>
+                  </Label>
+               </children>
+            </HBox>
+            <ImageView>
+               <image>
+                  <Image url="@../icons/icons8-dots-30.png" />
+               </image>
+               <HBox.margin>
+                  <Insets left="400.0" />
+               </HBox.margin>
+            </ImageView>
+         </children>
+      </HBox>
+   </children>
+</AnchorPane>
