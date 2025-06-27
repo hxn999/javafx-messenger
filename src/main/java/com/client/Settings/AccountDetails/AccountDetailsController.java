@@ -3,6 +3,7 @@ package com.client.Settings.AccountDetails;
 import com.client.login.LoginController;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.FileChooser;
@@ -10,6 +11,11 @@ import javafx.stage.FileChooser;
 import java.io.File;
 
 public class AccountDetailsController extends LoginController {
+    public TextField phoneField;
+    public TextField usernameField;
+
+    @FXML
+    public Button saveButton;
     @FXML
     private ImageView profileImageView;
     @FXML private Button changePhotoButton;
