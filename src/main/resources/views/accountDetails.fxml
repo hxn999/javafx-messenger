@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Circle?>
+
+<AnchorPane xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.client.Settings.AccountDetails.AccountDetailsController"
+            prefWidth="360" prefHeight="640" style="-fx-background-color: #F0F2F5;" stylesheets="@../styles/style.css">
+
+    <!-- Top Bar (Messenger Style) -->
+    <HBox prefHeight="56" prefWidth="360"
+          style="-fx-background-color: #0084FF; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 4, 0, 0, 2);"
+          AnchorPane.topAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0"
+          alignment="CENTER_LEFT" spacing="16" stylesheets="@../styles/style.css">
+        <javafx.scene.control.Button fx:id="backButton" style="-fx-background-color: transparent;" >
+            <graphic>
+                <javafx.scene.shape.SVGPath content="M 16 0 L 0 12 L 16 24"
+                                            style="-fx-fill: white; -fx-scale-x: 1.2; -fx-scale-y: 1.2;" />
+            </graphic>
+        </javafx.scene.control.Button>
+        <Label text="Edit Profile"
+               style="-fx-text-fill: white; -fx-font-size: 18; -fx-font-weight: bold;" />
+    </HBox>
+
+    <!-- Content Container with padding via style -->
+    <VBox spacing="16" AnchorPane.topAnchor="72" AnchorPane.leftAnchor="16" AnchorPane.rightAnchor="16"
+          style="-fx-padding: 16;" stylesheets="@../styles/style.css">
+        <!-- Profile Picture & Change Photo -->
+        <VBox alignment="CENTER" spacing="12">
+            <ImageView fx:id="profileImageView" fitWidth="100" fitHeight="100" preserveRatio="true">
+                <clip>
+                    <Circle radius="50" centerX="50" centerY="50" />
+                </clip>
+            </ImageView>
+            <javafx.scene.control.Button fx:id="changePhotoButton" text="Change Photo"
+                                         style="-fx-background-color: transparent; -fx-text-fill: #0084FF; -fx-font-weight: bold;" />
+        </VBox>
+
+        <!-- Username Field -->
+        <VBox spacing="6" stylesheets="@../styles/style.css">
+            <Label text="Name" style="-fx-text-fill: #65676B; -fx-font-size: 14;" />
+            <TextField fx:id="usernameField" promptText="Your name"
+                       style="-fx-background-radius: 8; -fx-border-radius: 8; -fx-border-color: #CCD0D5;" />
+        </VBox>
+
+        <!-- Phone Number Field -->
+        <VBox spacing="6" stylesheets="@../styles/style.css">
+            <Label text="Phone Number" style="-fx-text-fill: #65676B; -fx-font-size: 14;" />
+            <TextField fx:id="phoneField" promptText="e.g. +1 123 456 7890"
+                       style="-fx-background-radius: 8; -fx-border-radius: 8; -fx-border-color: #CCD0D5;" />
+        </VBox>
+
+        <!-- Status Message -->
+        <VBox spacing="6" stylesheets="@../styles/style.css">
+            <Label text="About" style="-fx-text-fill: #65676B; -fx-font-size: 14;" />
+            <TextArea fx:id="statusArea" promptText="Say something about yourself..." wrapText="true" prefRowCount="3"
+                      style="-fx-background-radius: 8; -fx-border-radius: 8; -fx-border-color: #CCD0D5;" />
+        </VBox>
+
+        <!-- Action Buttons -->
+        <HBox spacing="10" alignment="CENTER_RIGHT" stylesheets="@../styles/style.css">
+            <javafx.scene.control.Button fx:id="saveButton" text="Save"
+                                         style="-fx-background-color: #0084FF; -fx-text-fill: white; -fx-background-radius: 8; -fx-padding: 8 16;" />
+        </HBox>
+    </VBox>
+
+</AnchorPane>
+
+
