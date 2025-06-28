@@ -2,6 +2,7 @@ module com.client.login {
     requires javafx.controls;
     requires javafx.fxml;
     requires java.desktop;
+    requires javafx.media;
 
     exports com.client.chat;
     exports com.client.Settings;

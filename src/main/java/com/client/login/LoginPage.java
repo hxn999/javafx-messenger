@@ -13,7 +13,7 @@ public class LoginPage extends Application {
         @Override
         public void start(Stage stage) throws IOException {
 //            FXMLLoader fxmlLoaderChattingPage = new FXMLLoader(getClass().getResource("/views/chat.fxml")); //chatting interference is going to open
-            FXMLLoader fxmlLoaderHomePage = new FXMLLoader(getClass().getResource("/views/settings.fxml"));
+            FXMLLoader fxmlLoaderHomePage = new FXMLLoader(getClass().getResource("/views/login.fxml"));
             boolean whichPagetoOpen = false;
             Parent root = fxmlLoaderHomePage.load();
 //            Parent chat = fxmlLoaderChattingPage.load();
