@@ -27,6 +27,7 @@ public class AccountDetailsPage extends SettingPage {
 
         }
         stage.show();
+
     }
 
     public static void main(String[] args) {
