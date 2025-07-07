@@ -43,8 +43,29 @@
     -fx-border-width: 2px;
 }
 .search-input{
-  -fx-border-width: none;
+    -fx-border-width: none;
+
     -fx-background-color: transparent;
     -fx-text-fill: white;
     -fx-font-size: 16px;
+    -fx-border-radius:  5px;
+    -fx-background-radius:  5px;
+}
+.send-btn{
+    -fx-border-radius:  15px;
+    -fx-background-radius:  15px;
+
+}
+.send-btn:hover{
+    -fx-text-fill: #596bf6;
+    -fx-cursor: hand;
+}
+
+.message{
+    -fx-background-color: #3b4ef7;
+    -fx-border-radius:  5px;
+    -fx-background-radius:  5px;
+    -fx-text-fill: white;
+    -fx-padding: 8px;
+    -fx-pref-width: max-content;
 }
