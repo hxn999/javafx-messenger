@@ -23,7 +23,7 @@ public class Server{
         ExecutorService executorService = Executors.newCachedThreadPool();
 
         try(ServerSocket serverSocket = new ServerSocket(5000)){
-
+            System.out.println("waiting for client");
             Socket socket  = serverSocket.accept(); // blocking call
             System.out.println("Server accepts client connection");
             clients.add(socket);

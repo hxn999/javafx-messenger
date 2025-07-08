@@ -16,6 +16,9 @@ public class User {
     private List<Integer> chatList;
     private static  List<User> allUsers;
 
+    static {
+        allUsers = new ArrayList<>();
+    }
 
     public String getName() {
         return name;
@@ -81,6 +84,8 @@ public class User {
         this.password = password;
         this.blocklist = blocklist;
         this.chatList = chatList;
+//        this.allUsers = new ArrayList<>();
+        // TODO initalize in a static block
     }
 
     public static void Add(User user) {
@@ -98,7 +103,8 @@ public class User {
     {
         for(User u:allUsers)
         {
-            if(Objects.equals(u.phone, phone))
+
+            if(u.phone.equals(phone))
             {
                 return u;
             }
@@ -107,7 +113,7 @@ public class User {
     }
 
 
-    public static void Load()
+    public static void LoadHelper()
     {
         // read the file
         String filePath="server/src/main/db/users.txt";
@@ -133,18 +139,75 @@ public class User {
                     tempChatList.add( Integer.parseInt(data[i]) );
                 }
                 // creating block list
-                int blockCount = Integer.parseInt(data[5+chatCount]);
-                List<User> tempBlockList = new ArrayList<>() ;
-                for (int i = 6+chatCount; i < (6+ blockCount) ; i++) {
-                    try {
-                        User blockedUser = Find(data[i]);
-                        tempBlockList.add(blockedUser);
-                    } catch (Exception e) {
-                         e.printStackTrace();
-                    }
-                }
-                User temp = new User(name,url,phone,password,tempChatList,tempBlockList);
+//                int blockCount = Integer.parseInt(data[5+chatCount]);
+//                List<User> tempBlockList = new ArrayList<>() ;
+//                for (int i = 6+chatCount; i < (6+ blockCount) ; i++) {
+//                    try {
+//                        User blockedUser = Find(data[i]);
+//                        tempBlockList.add(blockedUser);
+//                    } catch (Exception e) {
+//                         e.printStackTrace();
+//                    }
+//                }
+                // making blocklist null because first the users need to be loaded
+                User temp = new User(name,url,phone,password,tempChatList,null);
+                allUsers.add(temp);
+                //putting into treemap
 
+
+            }
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void Load() {
+        // loading all users first
+        LoadHelper();
+        // read the file
+        String filePath="server/src/main/db/users.txt";
+        File usersFile = new File(filePath);
+        try {
+            Scanner Reader = new Scanner(usersFile);
+            while(Reader.hasNext())
+            {
+                String line = Reader.nextLine();
+
+                // separating data parts
+                // format -> Name:Phone:Password:url:chatCount:int:int:int:int:blockCount:phone:phone:phone
+                String[] data = line.split(":");
+                // separating data
+//                String name = data[0];
+                String phone = data[1];
+//                String password = data[2];
+//                String url = data[3];
+                // creating chat list
+                int chatCount = Integer.parseInt(data[4]);
+//                List<Integer> tempChatList = new ArrayList<>() ;
+//                for (int i = 5; i < (5+ chatCount) ; i++) {
+//                    tempChatList.add( Integer.parseInt(data[i]) );
+//                }
+                // creating block list
+//                int blockCount = Integer.parseInt(data[5+chatCount]);
+                List<User> tempBlockList = new ArrayList<>() ;
+//                for (int i = 6+chatCount; i < (6+ blockCount) ; i++) {
+//                    try {
+//                        User blockedUser = Find(data[i]);
+//                        tempBlockList.add(blockedUser);
+//                    } catch (Exception e) {
+//                         e.printStackTrace();
+//                    }
+//                }
+                // making blocklist null because first the users need to be loaded
+//                User temp = new User(name,url,phone,password,tempChatList,null);
+
+                try {
+                    Find(phone).setBlocklist(tempBlockList);
+                } catch (Exception e) {
+                    System.out.println(phone);
+                    throw new RuntimeException(e);
+                }
                 //putting into treemap
 
 
@@ -152,5 +215,15 @@ public class User {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "name='" + name + '\'' +
+                ", url='" + url + '\'' +
+                ", phone='" + phone + '\'' +
+                ", password='" + password + '\'' +
+                '}';
     }
 }
