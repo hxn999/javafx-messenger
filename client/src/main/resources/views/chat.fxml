@@ -28,7 +28,7 @@
             </HBox>
             <ScrollPane prefHeight="541.0" prefWidth="342.0">
                <content>
-                  <VBox prefHeight="531.0" prefWidth="333.0">
+                  <VBox prefHeight="531.0" prefWidth="337.0">
                      <children>
                         <HBox alignment="CENTER" prefHeight="72.0" prefWidth="334.0">
                            <children>
@@ -89,7 +89,20 @@
             </ScrollPane>
          </children>
       </VBox>
-      <HBox layoutX="341.0" layoutY="545.0" prefHeight="58.0" prefWidth="662.0" style="-fx-background-color: #3b4ef7;" />
+      <HBox alignment="CENTER" layoutX="341.0" layoutY="545.0" prefHeight="58.0" prefWidth="662.0" style="-fx-background-color: #3b4ef7; -fx-spacing: 30;">
+         <children>
+            <ImageView fitHeight="35.0" fitWidth="35.0" styleClass="send-btn">
+               <image>
+                  <Image url="@../icons/icons8-photo-30.png" />
+               </image>
+            </ImageView>
+            <TextField prefHeight="37.0" prefWidth="457.0" promptText="Write here..." style="-fx-background-color: #596bf6;" styleClass="search-input" />
+            <ImageView fitHeight="35.0" fitWidth="35.0" styleClass="send-btn">
+               <image>
+                  <Image url="@../icons/icons8-telegram-app-50.png" />
+               </image>
+            </ImageView>
+         </children></HBox>
       <HBox alignment="CENTER_LEFT" layoutX="343.0" prefHeight="58.0" prefWidth="662.0" style="-fx-background-color: #3b4ef7;">
          <children>
             <HBox alignment="CENTER" prefHeight="58.0" prefWidth="212.0">
@@ -116,5 +129,18 @@
             </ImageView>
          </children>
       </HBox>
+      <ScrollPane layoutX="344.0" layoutY="59.0" prefHeight="486.0" prefWidth="656.0">
+         <content>
+            <VBox alignment="BOTTOM_RIGHT" prefHeight="483.0" prefWidth="646.0">
+               <children>
+                  <Label alignment="CENTER_RIGHT" prefHeight="42.0" prefWidth="318.0" styleClass="message" text="Label">
+                     <font>
+                        <Font size="14.0" />
+                     </font>
+                  </Label>
+               </children>
+            </VBox>
+         </content>
+      </ScrollPane>
    </children>
 </AnchorPane>
