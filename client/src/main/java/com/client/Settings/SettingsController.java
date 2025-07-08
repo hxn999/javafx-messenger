@@ -29,6 +29,7 @@ public class SettingsController {
     public void initialize() {
         editProfileButton.setOnAction(this::handleEditProfile);
         logoutButton.setOnAction(this::handleLogout);
+        backButton.setOnAction(this::handleBack);
 
         // Initialize checkboxes with saved preferences
 //        readReceiptsCheckbox.setSelected(true); // Default value, can be changed based on user preference
@@ -101,7 +102,17 @@ public class SettingsController {
             e.printStackTrace();
         }
     }
-    public void handleBack(ActionEvent actionEvent) {
-
+    public void handleBack(ActionEvent event) {
+        try {
+            // Load the login page
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/chat.fxml"));
+            Parent root = loader.load();
+            Scene scene = new Scene(root, 1000, 600);
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setScene(scene);
+            stage.show();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

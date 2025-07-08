@@ -3,6 +3,7 @@ module com.client.login {
     requires javafx.fxml;
     requires java.desktop;
     requires javafx.media;
+    requires com.fasterxml.jackson.core;
 
     exports com.client.chat;
     exports com.client.Settings;
@@ -13,5 +14,6 @@ module com.client.login {
     opens com.client.Settings to javafx.graphics, javafx.fxml;
 
     opens com.client.login to javafx.fxml;
+    opens com.client.chat to javafx.fxml;
 
 }

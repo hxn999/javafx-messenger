@@ -1,0 +1,4 @@
+hasan:hi ki koros:10
+hasan:ki khobor:11
+nafin:valo:12
+hasan:same:13

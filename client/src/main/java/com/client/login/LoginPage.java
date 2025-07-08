@@ -7,6 +7,7 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.net.URL;
 
 public class LoginPage extends Application {
 
@@ -15,6 +16,7 @@ public class LoginPage extends Application {
 //            FXMLLoader fxmlLoaderChattingPage = new FXMLLoader(getClass().getResource("/views/chat.fxml")); //chatting interference is going to open
             FXMLLoader fxmlLoaderHomePage = new FXMLLoader(getClass().getResource("/views/login.fxml"));
             boolean whichPagetoOpen = false;
+
             Parent root = fxmlLoaderHomePage.load();
 //            Parent chat = fxmlLoaderChattingPage.load();
             Scene sceneofHomePage = new Scene(root, 1000, 600);

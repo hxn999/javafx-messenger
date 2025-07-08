@@ -10,12 +10,14 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.net.URL;
 
 public class AccountDetailsPage extends SettingPage {
     @Override
     public void start(Stage stage) throws IOException {
 //            FXMLLoader fxmlLoaderChattingPage = new FXMLLoader(getClass().getResource("/views/chat.fxml")); //chatting interference is going to open
         FXMLLoader fxmlLoaderHomePage = new FXMLLoader(getClass().getResource("/views/accountDetails.fxml"));
+
         boolean whichPagetoOpen = false;
         Parent root = fxmlLoaderHomePage.load();
 //            Parent chat = fxmlLoaderChattingPage.load();
