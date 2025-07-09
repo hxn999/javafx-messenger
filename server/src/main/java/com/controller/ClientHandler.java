@@ -67,27 +67,36 @@ public class ClientHandler {
     public void router() {
         try {
             while (true) {
+//                System.out.println("hi");
                 String type = request.readLine();
+                System.out.println(type);
 
-                switch (type) {
-                    case "MSG":
-                        messageSend();
-                        break;
-                    case "LOGIN":
-                        login();
-                        break;
-                    case "CREATE":
-                        createUser();
-                        break;
+                if(type!=null){
+
+                    switch (type) {
+                        case "MSG":
+                            messageSend();
+                            break;
+                        case "LOGIN":
+                            System.out.println("its login");
+                            login();
+                            break;
+                        case "CREATE":
+                            createUser();
+                            break;
 
 
+                    }
+                }else{
+//                    System.out.println("the req is null");
                 }
 
 
+//            System.out.println("h");
             }
 
-
         } catch (IOException e) {
+            System.out.println("IO Error !");
         }
     }
 
@@ -134,6 +143,10 @@ public class ClientHandler {
         try {
             String phone = request.readLine();
             String password = request.readLine();
+
+            System.out.println(phone);
+            System.out.println(password);
+
 
             try {
                 User user = User.Find(phone);

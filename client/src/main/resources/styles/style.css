@@ -199,3 +199,25 @@
 }
 
 
+
+
+.logo-image {
+    -fx-opacity: 0.6; /* Adjust transparency */
+    -fx-effect: innershadow(gaussian, #e0f0ff, 5, 0.5, 0, 0); /* Soft inner shadow using background color */
+}
+
+
+.primary-button {
+    -fx-background-color: #4A90E2;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 8 16 8 16;
+    -fx-background-radius: 5;
+}
+
+.primary-button:hover {
+    -fx-background-color: #357ABD;
+}
+
+
+

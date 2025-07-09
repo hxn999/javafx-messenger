@@ -3,6 +3,7 @@ package com.client.Settings;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -12,10 +13,17 @@ import javafx.scene.control.Label;
 import javafx.stage.Stage;
 import javafx.scene.media.AudioClip;
 
-public class SettingsController {
-    public Button editProfileButton;
-    public Button logoutButton;
-    public Button backButton;
+import java.net.URL;
+import java.util.ResourceBundle;
+
+public class SettingsController implements Initializable {
+
+    @FXML
+    private Button editProfileButton;
+    @FXML
+    private Button logoutButton;
+    @FXML
+    private Button backButton;
     @FXML
     private Label phoneNumberLabel;
     @FXML private CheckBox messageNotifCheckbox, soundNotifCheckbox;
@@ -29,7 +37,8 @@ public class SettingsController {
 
 
     @FXML
-    public void initialize() {
+    @Override
+    public void initialize(URL url, ResourceBundle resourceBundle) {
         editProfileButton.setOnAction(this::handleEditProfile);
         logoutButton.setOnAction(this::handleLogout);
         backButton.setOnAction(this::handleBack);
@@ -62,6 +71,7 @@ public class SettingsController {
             UDP_mode = newVal;
         });
     }
+
     @FXML
     private void handleEditProfile(ActionEvent event) {
         try {
@@ -117,4 +127,6 @@ public class SettingsController {
             e.printStackTrace();
         }
     }
+
+
 }

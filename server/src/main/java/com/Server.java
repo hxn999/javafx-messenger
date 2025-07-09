@@ -21,21 +21,23 @@ public class Server{
         List<Socket> clients = new ArrayList<>();
         HashMap<String,Integer> clientMap = new HashMap<>();
         ExecutorService executorService = Executors.newCachedThreadPool();
-
-        try(ServerSocket serverSocket = new ServerSocket(5000)){
-
-            Socket socket  = serverSocket.accept(); // blocking call
-            System.out.println("Server accepts client connection");
-            clients.add(socket);
-            ClientHandler clientHandler = new ClientHandler(socket,clients,clientMap);
-            executorService.submit(()->{
-                clientHandler.router();
-            });
+        while(true){
 
 
+            try(ServerSocket serverSocket = new ServerSocket(5000)){
+                System.out.println("waiting for client");
+                Socket socket  = serverSocket.accept(); // blocking call
+                System.out.println("Server accepts client connection");
+                clients.add(socket);
+                ClientHandler clientHandler = new ClientHandler(socket,clients,clientMap);
+                executorService.submit(clientHandler::router);
+            }
 
-        }catch (IOException e){
-            System.out.println("Client not listening");
+
+
+            catch (IOException e){
+                System.out.println("Client not listening");
+            }
         }
     }
 }

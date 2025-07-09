@@ -4,6 +4,7 @@ import com.client.login.LoginController;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -15,8 +16,10 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.io.File;
+import java.net.URL;
+import java.util.ResourceBundle;
 
-public class AccountDetailsController extends LoginController {
+public class AccountDetailsController implements Initializable {
     @FXML
     private TextField phoneField;
 
@@ -49,9 +52,16 @@ public class AccountDetailsController extends LoginController {
 
 
     @FXML
-    public void initialize() {
+    @Override
+    public void initialize(URL url, ResourceBundle resourceBundle) {
         // Optional: set a default placeholder
-        profileImageView.setImage(new Image(getClass().getResourceAsStream("/images/default-avatar.png")));
+        URL imgUrl = getClass().getResource("/images/account-avatar.png");
+        if (imgUrl == null) {
+            System.err.println(">>> cannot find /images/account-avatar.png on classpath");
+        } else {
+            Image img = new Image(imgUrl.toExternalForm());
+            profileImageView.setImage(img);
+        }
 
         changePhotoButton.setOnAction(evt -> {
             FileChooser chooser = new FileChooser();

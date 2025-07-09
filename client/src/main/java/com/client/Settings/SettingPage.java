@@ -10,7 +10,7 @@ import javafx.stage.Stage;
 import java.io.IOException;
 import java.net.URL;
 
-public class SettingPage extends LoginPage {
+public class SettingPage extends Application {
     @Override
     public void start(Stage stage) throws IOException {
 //            FXMLLoader fxmlLoaderChattingPage = new FXMLLoader(getClass().getResource("/views/chat.fxml")); //chatting interference is going to open
