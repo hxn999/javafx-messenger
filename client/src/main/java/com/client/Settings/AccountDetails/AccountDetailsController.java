@@ -12,6 +12,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
+import javafx.scene.shape.Circle;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
@@ -20,6 +21,7 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 public class AccountDetailsController implements Initializable {
+    public Circle clipCircle;
     @FXML
     private TextField phoneField;
 
@@ -54,7 +56,19 @@ public class AccountDetailsController implements Initializable {
     @FXML
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        // Optional: set a default placeholder
+
+        clipCircle.radiusProperty()
+                .bind(profileImageView.layoutBoundsProperty()
+                        .map(b -> b.getWidth() / 2));
+
+        // center = half‑width, half‑height
+        clipCircle.centerXProperty()
+                .bind(profileImageView.layoutBoundsProperty()
+                        .map(b -> b.getWidth() / 2));
+        clipCircle.centerYProperty()
+                .bind(profileImageView.layoutBoundsProperty()
+                        .map(b -> b.getHeight() / 2));
+
         URL imgUrl = getClass().getResource("/images/account-avatar.png");
         if (imgUrl == null) {
             System.err.println(">>> cannot find /images/account-avatar.png on classpath");

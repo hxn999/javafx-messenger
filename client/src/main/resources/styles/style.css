@@ -146,6 +146,8 @@
     -fx-clip: null;
 }
 
+
+
 /* Separator */
 .separator, .separator .line {
     -fx-background-color: transparent;
