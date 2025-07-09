@@ -5,6 +5,7 @@ module com.client.login {
     requires java.desktop;
     requires javafx.media;
 
+    exports com.Application;
     exports com.client.chat;
     exports com.client.Settings;
     exports com.client.login;
@@ -14,6 +15,7 @@ module com.client.login {
     opens com.client.Settings to javafx.graphics, javafx.fxml;
 
     opens com.client.login to javafx.fxml;
+    opens com.Application to javafx.fxml;
 
 
 }

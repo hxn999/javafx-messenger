@@ -11,7 +11,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="1000.0" styleClass="login" stylesheets="@../styles/style.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="1000.0" styleClass="login" stylesheets="@../styles/style.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.client.login.LoginController">
    <children>
       <VBox alignment="TOP_CENTER" layoutX="-5.0" layoutY="-2.0" prefHeight="607.0" prefWidth="400.0" styleClass="accent-color" stylesheets="@style.css">
          <children>
@@ -45,17 +45,17 @@
       <VBox alignment="CENTER" layoutX="394.0" layoutY="2.0" prefHeight="608.0" prefWidth="609.0" style="-fx-spacing: 30;" stylesheets="@style.css">
          <children>
             <Label alignment="CENTER" prefHeight="66.0" prefWidth="601.0" styleClass="h1" text="Log In" />
-            <TextField maxWidth="-Infinity" minWidth="-Infinity" prefHeight="60.0" prefWidth="430.0" promptText="Enter Phone" styleClass="login-input">
+            <TextField fx:id="phone" maxWidth="-Infinity" minWidth="-Infinity" prefHeight="60.0" prefWidth="430.0" promptText="Enter Phone" styleClass="login-input">
                <font>
                   <Font size="25.0" />
                </font>
             </TextField>
-            <TextField maxWidth="-Infinity" minWidth="-Infinity" prefHeight="60.0" prefWidth="430.0" promptText="Enter Password" styleClass="login-input">
+            <TextField fx:id="password" maxWidth="-Infinity" minWidth="-Infinity" prefHeight="60.0" prefWidth="430.0" promptText="Enter Password" styleClass="login-input">
                <font>
                   <Font size="25.0" />
                </font>
             </TextField>
-            <Button mnemonicParsing="false" styleClass="login-btn" text="Sign In">
+            <Button fx:id="login" mnemonicParsing="false" onAction="#loginHandler" styleClass="login-btn" text="Sign In">
                <font>
                   <Font size="20.0" />
                </font>

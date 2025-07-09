@@ -1,6 +1,7 @@
 package com.db;
 
 import java.io.*;
+import java.util.Locale;
 import java.util.Scanner;
 import java.util.TreeMap;
 
@@ -11,14 +12,14 @@ public class Chat {
     private String filePath;
     private File chatFile;
     // will store all messages sorted by timestamp
-    private TreeMap<Integer,String> chats ;
+    private TreeMap<Long,String> chats ;
 
 
-    public TreeMap<Integer, String> getChats() {
+    public TreeMap<Long, String> getChats() {
         return chats;
     }
 
-    public void setChats(TreeMap<Integer, String> chats) {
+    public void setChats(TreeMap<Long, String> chats) {
         this.chats = chats;
     }
 
@@ -40,7 +41,7 @@ public class Chat {
                 int timestampIndex = line.lastIndexOf(':');
                 String message = line.substring(0,timestampIndex);
                 String timestampString = line.substring(timestampIndex+1,line.length());
-                int timestamp = Integer.parseInt(timestampString);
+                long timestamp = Integer.parseInt(timestampString);
 
                 //putting into treemap
                 chats.put(timestamp,message);

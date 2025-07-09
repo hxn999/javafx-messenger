@@ -21,6 +21,8 @@ public class Server{
         List<Socket> clients = new ArrayList<>();
         HashMap<String,Integer> clientMap = new HashMap<>();
         ExecutorService executorService = Executors.newCachedThreadPool();
+        while(true){
+
 
         try(ServerSocket serverSocket = new ServerSocket(5000)){
             System.out.println("waiting for client");
@@ -28,14 +30,14 @@ public class Server{
             System.out.println("Server accepts client connection");
             clients.add(socket);
             ClientHandler clientHandler = new ClientHandler(socket,clients,clientMap);
-            executorService.submit(()->{
-                clientHandler.router();
-            });
+            executorService.submit(clientHandler::router);
+        }
 
 
 
-        }catch (IOException e){
+        catch (IOException e){
             System.out.println("Client not listening");
+        }
         }
     }
 }
