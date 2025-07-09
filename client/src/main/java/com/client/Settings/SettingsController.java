@@ -24,6 +24,9 @@ public class SettingsController {
     private static boolean soundNotifSelected = false;
     private static boolean messageNotifSelected = false;
 
+    private static boolean TCP_mode = false;
+    private static boolean UDP_mode = false;
+
 
     @FXML
     public void initialize() {
@@ -48,17 +51,16 @@ public class SettingsController {
         });
 
 
-        // Read Receipts and Last Seen visibility handling(Privacy CheckBox Part)
-//        readReceiptsCheckbox.setSelected(UserSettings.isReadReceiptsEnabled());
-//        lastSeenCheckbox.setSelected(UserSettings.isLastSeenVisible());
-//
-//        // Save changes when toggled
-//        readReceiptsCheckbox.setOnAction(e ->
-//                UserSettings.setReadReceiptsEnabled(readReceiptsCheckbox.isSelected())
-//        );
-//        lastSeenCheckbox.setOnAction(e ->
-//                UserSettings.setLastSeenVisible(lastSeenCheckbox.isSelected())
-//        );
+        //Privacy Part
+        readReceiptsCheckbox.setSelected(TCP_mode);
+        readReceiptsCheckbox.selectedProperty().addListener((obs, oldVal, newVal) -> {
+            TCP_mode = newVal;
+        });
+
+        lastSeenCheckbox.setSelected(UDP_mode);
+        lastSeenCheckbox.selectedProperty().addListener((obs, oldVal, newVal) -> {
+            UDP_mode = newVal;
+        });
     }
     @FXML
     private void handleEditProfile(ActionEvent event) {

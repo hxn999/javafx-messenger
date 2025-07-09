@@ -50,18 +50,17 @@
 
         <!-- Username Field -->
         <VBox spacing="6" stylesheets="@../styles/style.css">
-            <Label text="Name" style="-fx-text-fill: #65676B; -fx-font-size: 14;" />
-            <TextField fx:id="usernameField" promptText="Your name"
+            <Label text="Username" style="-fx-text-fill: #65676B; -fx-font-size: 14;" />
+            <TextField fx:id="usernameField" promptText="Enter Your new Name"
                        style="-fx-background-radius: 8; -fx-border-radius: 8; -fx-border-color: #CCD0D5;" />
         </VBox>
 
-        <!-- Phone Number Field -->
+        <!-- Phone Field -->
         <VBox spacing="6" stylesheets="@../styles/style.css">
             <Label text="Phone Number" style="-fx-text-fill: #65676B; -fx-font-size: 14;" />
-            <TextField fx:id="phoneField" promptText="e.g. +1 123 456 7890"
+            <TextField fx:id="phoneField" promptText="Enter new Phone number e.g. +880 123 456 7890"
                        style="-fx-background-radius: 8; -fx-border-radius: 8; -fx-border-color: #CCD0D5;" />
         </VBox>
-
         <!-- Status Message -->
         <VBox spacing="6" stylesheets="@../styles/style.css">
             <Label text="About" style="-fx-text-fill: #65676B; -fx-font-size: 14;" />
@@ -72,7 +71,8 @@
         <!-- Action Buttons -->
         <HBox spacing="10" alignment="CENTER_RIGHT" stylesheets="@../styles/style.css">
             <Button fx:id="saveButton" text="Save"
-                    style="-fx-background-color: #0084FF; -fx-text-fill: white; -fx-background-radius: 8; -fx-padding: 8 16;" />
+                    onAction="#handleSave"
+                    style="-fx-background-color: #0084FF; -fx-text-fill: white; -fx-background-radius: 8; -fx-padding: 8 16;"/>
         </HBox>
     </VBox>
 
