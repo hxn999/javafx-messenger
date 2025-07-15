@@ -203,4 +203,6 @@
     -fx-padding: 12;
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 4, 0, 0, 1);
 }
-
+.error-color{
+    -fx-text-fill: #c12c2c;
+}

@@ -14,7 +14,7 @@ public class User {
     private String password;
     private List<User> blocklist;
     private List<Integer> chatList;
-    private static  List<User> allUsers;
+    private static List<User> allUsers;
 
     static {
         allUsers = new ArrayList<>();
@@ -89,23 +89,20 @@ public class User {
     }
 
     public static void Add(User user) {
-        String userString = user.name+":"+user.phone+":"+user.password+":"+user.url+":"+user.chatList.size()+":";
-        for(int cht: user.chatList){
-            userString = userString+cht+":";
+        String userString = user.name + ":" + user.phone + ":" + user.password + ":" + user.url + ":" + user.chatList.size() + ":";
+        for (int cht : user.chatList) {
+            userString = userString + cht + ":";
         }
-        userString = userString+ user.blocklist.size()+":";
-        for(User usr: user.blocklist){
-            userString = userString+usr.phone+":";
+        userString = userString + user.blocklist.size() + ":";
+        for (User usr : user.blocklist) {
+            userString = userString + usr.phone + ":";
         }
     }
 
-    public static User Find(String phone) throws Exception
-    {
-        for(User u:allUsers)
-        {
+    public static User Find(String phone) throws Exception {
+        for (User u : allUsers) {
 
-            if(u.phone.equals(phone))
-            {
+            if (u.phone.equals(phone)) {
                 return u;
             }
         }
@@ -113,15 +110,13 @@ public class User {
     }
 
 
-    public static void LoadHelper()
-    {
+    public static void LoadHelper() {
         // read the file
-        String filePath="server/src/main/db/users.txt";
+        String filePath = "server/src/main/db/users.txt";
         File usersFile = new File(filePath);
         try {
             Scanner Reader = new Scanner(usersFile);
-            while(Reader.hasNext())
-            {
+            while (Reader.hasNext()) {
                 String line = Reader.nextLine();
 
                 // separating data parts
@@ -134,9 +129,9 @@ public class User {
                 String url = data[3];
                 // creating chat list
                 int chatCount = Integer.parseInt(data[4]);
-                List<Integer> tempChatList = new ArrayList<>() ;
-                for (int i = 5; i < (5+ chatCount) ; i++) {
-                    tempChatList.add( Integer.parseInt(data[i]) );
+                List<Integer> tempChatList = new ArrayList<>();
+                for (int i = 5; i < (5 + chatCount); i++) {
+                    tempChatList.add(Integer.parseInt(data[i]));
                 }
                 // creating block list
 //                int blockCount = Integer.parseInt(data[5+chatCount]);
@@ -150,7 +145,7 @@ public class User {
 //                    }
 //                }
                 // making blocklist null because first the users need to be loaded
-                User temp = new User(name,url,phone,password,tempChatList,null);
+                User temp = new User(name, url, phone, password, tempChatList, null);
                 allUsers.add(temp);
                 //putting into treemap
 
@@ -166,12 +161,11 @@ public class User {
         // loading all users first
         LoadHelper();
         // read the file
-        String filePath="server/src/main/db/users.txt";
+        String filePath = "server/src/main/db/users.txt";
         File usersFile = new File(filePath);
         try {
             Scanner Reader = new Scanner(usersFile);
-            while(Reader.hasNext())
-            {
+            while (Reader.hasNext()) {
                 String line = Reader.nextLine();
 
                 // separating data parts
@@ -189,23 +183,25 @@ public class User {
 //                    tempChatList.add( Integer.parseInt(data[i]) );
 //                }
                 // creating block list
-//                int blockCount = Integer.parseInt(data[5+chatCount]);
-                List<User> tempBlockList = new ArrayList<>() ;
-//                for (int i = 6+chatCount; i < (6+ blockCount) ; i++) {
-//                    try {
-//                        User blockedUser = Find(data[i]);
-//                        tempBlockList.add(blockedUser);
-//                    } catch (Exception e) {
-//                         e.printStackTrace();
-//                    }
-//                }
+                int blockCount = Integer.parseInt(data[5 + chatCount]);
+                System.out.println(blockCount);
+                List<User> tempBlockList = new ArrayList<>();
+                for (int i = 6 + chatCount; i < (6 + chatCount + blockCount); i++) {
+                    try {
+                        User blockedUser = Find(data[i]);
+
+                        tempBlockList.add(blockedUser);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
                 // making blocklist null because first the users need to be loaded
 //                User temp = new User(name,url,phone,password,tempChatList,null);
 
                 try {
                     Find(phone).setBlocklist(tempBlockList);
                 } catch (Exception e) {
-                    System.out.println(phone);
+
                     throw new RuntimeException(e);
                 }
                 //putting into treemap
@@ -219,11 +215,28 @@ public class User {
 
     @Override
     public String toString() {
-        return "User{" +
-                "name='" + name + '\'' +
-                ", url='" + url + '\'' +
-                ", phone='" + phone + '\'' +
-                ", password='" + password + '\'' +
-                '}';
+        StringBuilder sb = new StringBuilder();
+
+        sb.append(name).append(":")
+                .append(phone).append(":")
+                .append(password).append(":")
+                .append(url).append(":");
+
+        // Chat list count and values
+        sb.append(chatList.size());
+        for (int chatId : chatList) {
+            sb.append(":").append(chatId);
+        }
+
+        // Block list count and phone numbers
+        if (blocklist != null) {
+
+            sb.append(":").append(blocklist.size());
+            for (User u : blocklist) {
+                sb.append(":").append(u.phone);
+            }
+        }
+
+        return sb.toString();
     }
 }

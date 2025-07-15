@@ -10,6 +10,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 
 /*
         Request style from client
@@ -35,6 +36,17 @@ import java.util.List;
           URL
           "
 
+
+        server will response the client with a status code and then payload
+
+        "STATUS_CODE
+         PAYLOAD"
+
+         status codes
+         200 -> ok
+         401 -> unauthorized
+         404 -> not found
+         500 -> internal server error
 
 
 
@@ -150,19 +162,24 @@ public class ClientHandler {
 
             try {
                 User user = User.Find(phone);
-                if (user.getPassword() == password) {
-                    response.println("login successfull");
+                if (Objects.equals(user.getPassword(), password)) {
+                    String userString = user.toString();
+                    String responseString = "200\n" +
+                            userString +
+                            "\n";
+
+                    response.println(responseString);
                     return;
                 } else {
-                    response.println("Wrong password");
+                    response.println("401");
                 }
             } catch (Exception e) {
-                response.println("User Does Not Exist");
+                response.println("404");
             }
 
 
         } catch (IOException e) {
-            System.out.println("Login Failed");
+            System.out.println("500");
         }
 
     }
@@ -179,9 +196,14 @@ public class ClientHandler {
 
             User.Add(newUser);
 
-            response.println("User created");
+            String userString = newUser.toString();
+            String responseString = "200\n" +
+                    userString +
+                    "\n";
+
+            response.println(responseString);
         } catch (IOException e) {
-            response.println("User creation failed");
+            response.println("500");
         }
 
     }

@@ -1,5 +1,6 @@
 package com.Application;
 
+import com.api.Receiver;
 import com.api.Sender;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -28,6 +29,8 @@ public class App extends Application {
         Sender sender = null;
         Socket socket=null;
 
+
+
         try{
             socket= new Socket("127.0.0.1", 5000);
             sender = new Sender("Sender-Thread",socket);
@@ -36,8 +39,8 @@ public class App extends Application {
         }
         sender.start();
 
-        System.out.println(System.currentTimeMillis());
-        System.out.println(System.getProperty("javafx.runtime.version"));
+
+
         launch();
     }
 }
