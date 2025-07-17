@@ -8,7 +8,7 @@ import java.net.Socket;
 
 public class Sender extends Thread {
 
-    private  Socket socket;
+    private Socket socket;
     private String type;
     public static BufferedReader receive;
     private PrintWriter send;
@@ -67,8 +67,15 @@ public class Sender extends Thread {
 
     }
 
-    BufferedReader getResponse()
-    {
+    public synchronized void createAccount(String name, String phone, String password) {
+
+        request = "CREATE\n" +
+                name + "\n" + phone + "\n" + password + "\n";
+        notify();
+
+    }
+
+    BufferedReader getResponse() {
         return receive;
     }
 

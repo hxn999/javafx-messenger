@@ -206,3 +206,49 @@
 .error-color{
     -fx-text-fill: #c12c2c;
 }
+
+/* settings button base */
+.settings-icon-btn {
+    -fx-background-color: linear-gradient(to bottom right, #4e54c8, #8f94fb);
+    -fx-background-radius: 20;
+    -fx-cursor: hand;
+    -fx-padding: 8;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 2);
+    -fx-graphic-text-gap: 0;
+}
+
+/* hover state */
+.settings-icon-btn:hover {
+    -fx-background-color: linear-gradient(to bottom right, #5f66d1, #9aa0ff);
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.5), 12, 0, 0, 4);
+}
+
+/* pressed/click state */
+.settings-icon-btn:pressed {
+    -fx-background-color: linear-gradient(to top left, #3f44b8, #7f84eb);
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.6), 6, 0, 0, 1);
+}
+
+
+
+
+.logo-image {
+    -fx-opacity: 0.6; /* Adjust transparency */
+    -fx-effect: innershadow(gaussian, #e0f0ff, 5, 0.5, 0, 0); /* Soft inner shadow using background color */
+}
+
+
+.primary-button {
+    -fx-background-color: #4A90E2;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 8 16 8 16;
+    -fx-background-radius: 5;
+}
+
+.primary-button:hover {
+    -fx-background-color: #357ABD;
+}
+
+
+

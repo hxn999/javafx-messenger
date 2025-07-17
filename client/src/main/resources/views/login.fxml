@@ -35,7 +35,7 @@
                   </ImageView>
                </children>
             </HBox>
-            <Button mnemonicParsing="false" styleClass="create-acc-btn" text="Create Account">
+            <Button fx:id="createAccountButton" mnemonicParsing="false" styleClass="create-acc-btn" text="Create Account">
                <font>
                   <Font size="20.0" />
                </font>

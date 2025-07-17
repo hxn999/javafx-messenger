@@ -1,6 +1,5 @@
 package com.Application;
 
-import com.api.Receiver;
 import com.api.Sender;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -13,8 +12,13 @@ import java.io.IOException;
 import java.net.Socket;
 
 public class App extends Application {
+
+    // making the stage global for accessing
+    public static Stage globalStage;
+
     @Override
     public void start(Stage stage) throws IOException {
+        globalStage = stage;
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/views/login.fxml"));
         Parent root = fxmlLoader.load();
         Scene scene = new Scene(root, 1000, 600);
@@ -29,14 +33,13 @@ public class App extends Application {
         Sender sender = null;
         Socket socket=null;
 
-
-
         try{
             socket= new Socket("127.0.0.1", 5000);
             sender = new Sender("Sender-Thread",socket);
         }catch(IOException e){
             e.printStackTrace();
         }
+
         sender.start();
 
 

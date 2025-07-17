@@ -1,12 +1,17 @@
 package com.client.login;
 
 import com.api.Response;
+import com.client.util.Page;
+import com.client.util.Pages;
 import com.db.User;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
+import javafx.fxml.*;
 import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 
 import java.awt.event.KeyEvent;
@@ -32,41 +37,41 @@ import java.io.File;
 import java.util.concurrent.CompletableFuture;
 
 import com.api.Sender;
+import com.api.Sender;
+import javafx.stage.Stage;
 
 public class LoginController implements Initializable {
-    @FXML
-    private TextField searchField;
-    @FXML
-    private VBox contactsBox;
     @FXML
     private TextField phone;
     @FXML
     private TextField password;
     @FXML
-    private Button login;
+    private Label selectedOption;
     @FXML
     private Label errorText = new Label();
     @FXML
     private VBox credentialBox;
+    @FXML
+    private Button login;
+    @FXML
+    private Button createAccountButton;
 
 
-//    @FXML
-//        private Label selectedOption;
-//        private static LoginController instance;
-//
-//    public LoginController() {
-//        instance = this;
-//    }
-//
-//    public static LoginController getInstance() {
-//        return instance;
-//    }
+    private static LoginController instance;
 
-    //    @FXML
-//        protected void onHelloButtonClick() {
-//            selectedOption.setText("Welcome to JavaFX Application!");
-//        }
-//
+    @Override
+    public void initialize(URL url, ResourceBundle resourceBundle) {
+        createAccountButton.setOnAction(this::handleCreateAccount);
+    }
+
+    public LoginController() {
+        instance = this;
+    }
+
+    public static LoginController getInstance() {
+        return instance;
+    }
+
     @FXML
     public void loginHandler() {
 
@@ -80,8 +85,11 @@ public class LoginController implements Initializable {
         CompletableFuture<Response> asyncResponse = CompletableFuture.supplyAsync(() -> {
             Response response = null;
             try {
+                System.out.println("Hi");
                 String statusString = Sender.receive.readLine();
+                System.out.println("Hi2");
                 response = new Response(statusString);
+
                 if (response.statusCode == 200) {
 
                     response.body = Sender.receive.readLine();
@@ -97,8 +105,16 @@ public class LoginController implements Initializable {
         asyncResponse.thenApply((res) -> {
 
             System.out.println(res);
-            if(res.statusCode != 200) {
+            if (res.statusCode != 200) {
                 Platform.runLater(() -> showError("Invalid phone number or password"));
+            } else {
+                Platform.runLater(() -> {
+                    try {
+                        new Page().Goto(Pages.CHAT);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
             }
 
             return res;
@@ -107,10 +123,15 @@ public class LoginController implements Initializable {
 
     }
 
+    //new Account Creation Loader
+    @FXML
+    private void handleCreateAccount(ActionEvent event) {
+        try {
 
-    @Override
-    public void initialize(URL url, ResourceBundle resourceBundle) {
-
+            new Page().Goto(Pages.CREATE_ACCOUNT);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     void showError(String error) {
@@ -119,26 +140,18 @@ public class LoginController implements Initializable {
         System.out.println("error : " + error);
         errorText.setPrefHeight(15.0);
         errorText.setPrefWidth(419.0);
-
-// Set alignment
         errorText.setAlignment(Pos.CENTER);
-
-// Set font size
         errorText.setFont(new Font(14.0));
-
-// Set text color
         errorText.setStyle("-fx-text-fill: #c12c2c;");
-
-// Add CSS class (if using external styles)
         errorText.getStyleClass().add("error-color");
-        if(!credentialBox.getChildren().get(3).equals(errorText)){
 
-        credentialBox.getChildren().add(3,errorText);
+        if (!credentialBox.getChildren().get(3).equals(errorText)) {
+            credentialBox.getChildren().add(3, errorText);
         }
 
     }
 
-    //Account details part
+
 
 
 }

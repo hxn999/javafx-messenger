@@ -187,11 +187,12 @@ public class ClientHandler {
     private void createUser() {
 
         try {
+            System.out.println("hi create");
             String name = request.readLine();
             String phone = request.readLine();
             String password = request.readLine();
-            String url = request.readLine();
-
+//            String url = request.readLine();
+            String url = "";
             User newUser = new User(name, url, phone, password);
 
             User.Add(newUser);

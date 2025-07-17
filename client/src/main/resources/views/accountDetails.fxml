@@ -9,6 +9,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.shape.Circle?>
 
+<?import javafx.scene.layout.StackPane?>
 <AnchorPane xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.client.Settings.AccountDetails.AccountDetailsController"
             prefWidth="360" prefHeight="640"
@@ -39,29 +40,41 @@
           style="-fx-padding: 16;" stylesheets="@../styles/style.css">
         <!-- Profile Picture & Change Photo -->
         <VBox alignment="CENTER" spacing="12">
-            <ImageView fx:id="profileImageView" fitWidth="100" fitHeight="100" preserveRatio="true">
-                <clip>
-                    <Circle radius="50" centerX="50" centerY="50" />
-                </clip>
-            </ImageView>
+            <StackPane>
+                <!-- Outer circle as border -->
+                <Circle fx:id="borderCircle" radius="52"
+                        style="-fx-fill: transparent;
+                   -fx-stroke: #0084FF;
+                   -fx-stroke-width: 4;" />
+                <!-- Your image, clipped to 50px radius -->
+                <ImageView fx:id="profileImageView"
+                           fitWidth="100" fitHeight="100"
+                           preserveRatio="true">
+                    <clip>
+                        <Circle fx:id="clipCircle"/>
+                    </clip>
+                </ImageView>
+            </StackPane>
+
             <Button fx:id="changePhotoButton" text="Change Photo"
-                    style="-fx-background-color: transparent; -fx-text-fill: #0084FF; -fx-font-weight: bold;" />
+                    style="-fx-background-color: transparent;
+                 -fx-text-fill: #0084FF;
+                 -fx-font-weight: bold;" />
         </VBox>
 
         <!-- Username Field -->
         <VBox spacing="6" stylesheets="@../styles/style.css">
-            <Label text="Name" style="-fx-text-fill: #65676B; -fx-font-size: 14;" />
-            <TextField fx:id="usernameField" promptText="Your name"
+            <Label text="Username" style="-fx-text-fill: #65676B; -fx-font-size: 14;" />
+            <TextField fx:id="usernameField" promptText="Enter Your new Name"
                        style="-fx-background-radius: 8; -fx-border-radius: 8; -fx-border-color: #CCD0D5;" />
         </VBox>
 
-        <!-- Phone Number Field -->
+        <!-- Phone Field -->
         <VBox spacing="6" stylesheets="@../styles/style.css">
             <Label text="Phone Number" style="-fx-text-fill: #65676B; -fx-font-size: 14;" />
-            <TextField fx:id="phoneField" promptText="e.g. +1 123 456 7890"
+            <TextField fx:id="phoneField" promptText="Enter new Phone number e.g. +880 123 456 7890"
                        style="-fx-background-radius: 8; -fx-border-radius: 8; -fx-border-color: #CCD0D5;" />
         </VBox>
-
         <!-- Status Message -->
         <VBox spacing="6" stylesheets="@../styles/style.css">
             <Label text="About" style="-fx-text-fill: #65676B; -fx-font-size: 14;" />
@@ -72,7 +85,8 @@
         <!-- Action Buttons -->
         <HBox spacing="10" alignment="CENTER_RIGHT" stylesheets="@../styles/style.css">
             <Button fx:id="saveButton" text="Save"
-                    style="-fx-background-color: #0084FF; -fx-text-fill: white; -fx-background-radius: 8; -fx-padding: 8 16;" />
+                    onAction="#handleSave"
+                    style="-fx-background-color: #0084FF; -fx-text-fill: white; -fx-background-radius: 8; -fx-padding: 8 16;"/>
         </HBox>
     </VBox>
 

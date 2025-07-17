@@ -2,6 +2,8 @@ package com.db;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -97,6 +99,20 @@ public class User {
         for (User usr : user.blocklist) {
             userString = userString + usr.phone + ":";
         }
+
+        String filePath = "server/src/main/db/users.txt";
+        File usersFile = new File(filePath);
+        FileWriter fw = null;
+        try {
+            fw = new FileWriter(usersFile, true);
+            fw.write(user.toString());
+            allUsers.add(user);
+            fw.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+
     }
 
     public static User Find(String phone) throws Exception {
