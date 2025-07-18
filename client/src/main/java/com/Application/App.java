@@ -1,6 +1,7 @@
 package com.Application;
 
 import com.api.Sender;
+import com.db.User;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -12,8 +13,14 @@ import java.io.IOException;
 import java.net.Socket;
 
 public class App extends Application {
+
+    // making the stage global for accessing
+    public static Stage globalStage;
+//    public static User currentUser; // to store current login Account
+
     @Override
     public void start(Stage stage) throws IOException {
+        globalStage = stage;
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/views/login.fxml"));
         Parent root = fxmlLoader.load();
         Scene scene = new Scene(root, 1000, 600);
@@ -25,22 +32,16 @@ public class App extends Application {
     }
 
     public static void main(String[] args) {
+        Socket socket = null;
         Sender sender = null;
-        Socket socket=null;
-
         try{
             socket= new Socket("127.0.0.1", 5000);
             sender = new Sender("Sender-Thread",socket);
+            sender.start();
         }catch(IOException e){
             e.printStackTrace();
         }
-        if (sender != null) {
-            sender.start();
-        }
 
-
-        System.out.println(System.currentTimeMillis());
-        System.out.println(System.getProperty("javafx.runtime.version"));
         launch();
     }
 }

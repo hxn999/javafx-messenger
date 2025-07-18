@@ -9,12 +9,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<AnchorPane cache="true" cacheHint="SPEED" prefHeight="500" prefWidth="1000"
-            stylesheets="@../styles/style.css"
-            style="-fx-background-color: #e0f0ff;"
-            xmlns="http://javafx.com/javafx/23.0.1"
-            xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.client.createaccount.CreateAccountController">
+<AnchorPane cache="true" cacheHint="SPEED" prefHeight="500" prefWidth="1000" style="-fx-background-color: #e0f0ff;" stylesheets="@../styles/style.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.client.createaccount.CreateAccountController">
 
 
     <!-- Centered & Enlarged Logo -->
@@ -36,8 +31,9 @@
             <ImageView fx:id="avatarPreview" fitHeight="50" fitWidth="50.0" preserveRatio="true" />
         </HBox>
 
-            <Button fx:id="loginBtn" styleClass="primary-button" text="Create Account" />
-        
+        <Button fx:id="createBtn" onAction="#createBtnHandler" styleClass="primary-button" text="Create Account" />
+
 
     </VBox>
+    <Button fx:id="loginBackBtn" layoutX="54.0" layoutY="31.0" mnemonicParsing="false" onAction="#loginBackHandler" styleClass="login-btn" text="&lt;- Back" />
 </AnchorPane>

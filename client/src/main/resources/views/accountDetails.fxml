@@ -77,8 +77,8 @@
         </VBox>
         <!-- Status Message -->
         <VBox spacing="6" stylesheets="@../styles/style.css">
-            <Label text="About" style="-fx-text-fill: #65676B; -fx-font-size: 14;" />
-            <TextArea fx:id="statusArea" promptText="Say something about yourself..." wrapText="true" prefRowCount="3"
+            <Label text="New Password" style="-fx-text-fill: #65676B; -fx-font-size: 14;" />
+            <TextField fx:id="newPasswordField" promptText="Enter new password"
                       style="-fx-background-radius: 8; -fx-border-radius: 8; -fx-border-color: #CCD0D5;" />
         </VBox>
 

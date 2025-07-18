@@ -10,6 +10,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 
 /*
         Request style from client
@@ -36,11 +37,22 @@ import java.util.List;
           "
 
 
+        server will response the client with a status code and then payload
+
+        "STATUS_CODE
+         PAYLOAD"
+
+         status codes
+         200 -> ok
+         401 -> unauthorized
+         404 -> not found
+         500 -> internal server error
+
 
 
 
 */
-
+//import static com.Application.App.currentUser;
 
 public class ClientHandler {
     private Socket socket;
@@ -48,6 +60,8 @@ public class ClientHandler {
     private PrintWriter response; // response will send data to client
     private List<Socket> clients; // store all online clients
     private HashMap<String, Integer> clientMap; // for finding recienver socket with phone
+
+
 
     public ClientHandler(Socket socket, List<Socket> clients, HashMap<String, Integer> clientMap) {
         this.socket = socket;
@@ -150,19 +164,25 @@ public class ClientHandler {
 
             try {
                 User user = User.Find(phone);
-                if (user.getPassword() == password) {
-                    response.println("login successfull");
+                if (Objects.equals(user.getPassword(), password)) {
+                    String userString = user.toString();
+                    String responseString = "200\n" +
+                            userString +
+                            "\n";
+
+                    response.println(responseString);
+//                    currentUser = user;
                     return;
                 } else {
-                    response.println("Wrong password");
+                    response.println("401");
                 }
             } catch (Exception e) {
-                response.println("User Does Not Exist");
+                response.println("404");
             }
 
 
         } catch (IOException e) {
-            System.out.println("Login Failed");
+            System.out.println("500");
         }
 
     }
@@ -170,18 +190,24 @@ public class ClientHandler {
     private void createUser() {
 
         try {
+            System.out.println("hi create");
             String name = request.readLine();
             String phone = request.readLine();
             String password = request.readLine();
             String url = request.readLine();
-
             User newUser = new User(name, url, phone, password);
+//            currentUser = newUser;
 
             User.Add(newUser);
 
-            response.println("User created");
+            String userString = newUser.toString();
+            String responseString = "200\n" +
+                    userString +
+                    "\n";
+
+            response.println(responseString);
         } catch (IOException e) {
-            response.println("User creation failed");
+            response.println("500");
         }
 
     }

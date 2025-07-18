@@ -42,7 +42,7 @@
             </Button>
          </children>
       </VBox>
-      <VBox alignment="CENTER" layoutX="394.0" layoutY="2.0" prefHeight="608.0" prefWidth="609.0" style="-fx-spacing: 30;" stylesheets="@style.css">
+      <VBox fx:id="credentialBox" alignment="CENTER" layoutX="394.0" layoutY="2.0" prefHeight="608.0" prefWidth="609.0" style="-fx-spacing: 30;" stylesheets="@style.css">
          <children>
             <Label alignment="CENTER" prefHeight="66.0" prefWidth="601.0" styleClass="h1" text="Log In" />
             <TextField fx:id="phone" maxWidth="-Infinity" minWidth="-Infinity" prefHeight="60.0" prefWidth="430.0" promptText="Enter Phone" styleClass="login-input">

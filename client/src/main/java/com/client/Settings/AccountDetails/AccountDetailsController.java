@@ -1,6 +1,9 @@
 package com.client.Settings.AccountDetails;
 
 import com.client.login.LoginController;
+import com.client.util.Page;
+import com.controller.ClientHandler;
+import com.db.User;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -20,8 +23,11 @@ import java.io.File;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+//import static com.Application.App.currentUser;
+
 public class AccountDetailsController implements Initializable {
     public Circle clipCircle;
+
     @FXML
     private TextField phoneField;
 
@@ -36,22 +42,8 @@ public class AccountDetailsController implements Initializable {
     private ImageView profileImageView;
     @FXML
     private Button changePhotoButton;
-
-
-
-
-    public static boolean isValidBDNumber(String phone) {
-        if (phone.startsWith("+880")) {
-            return phone.length() == 14 && phone.substring(4).chars().allMatch(Character::isDigit);
-        }
-        if (phone.startsWith("01")) {
-            return phone.length() == 11 && phone.chars().allMatch(Character::isDigit);
-        }
-        return false;
-    }
-
-
-
+    @FXML
+    private TextField newPasswordField;
 
     @FXML
     @Override
@@ -85,9 +77,7 @@ public class AccountDetailsController implements Initializable {
             );
             File chosen = chooser.showOpenDialog(profileImageView.getScene().getWindow());
             if (chosen != null) {
-                Image img = new Image(chosen.toURI().toString(),
-                        100, 100,   // width/height
-                        true, true);// preserve ratio + smooth
+                Image img = new Image(chosen.toURI().toString(), 100, 100, true, true);// preserve ratio + smooth
                 profileImageView.setImage(img);
             }
         });
@@ -115,13 +105,26 @@ public class AccountDetailsController implements Initializable {
     }
 
     public void handleSave(ActionEvent actionEvent) {
-        if (usernameField.getText() != null && !usernameField.getText().isEmpty()) {
-            // to reset user name
-        }
-        if(isValidBDNumber(phoneField.getText())) {
-            // to reset user phone number
-        }
-        System.out.println("UsernameField: " + usernameField.getText() + " PhoneField: " + phoneField.getText());
+            if(Page.isValidBDNumber(phoneField.getText())) {
+                // to reset user phone number
+                String Phone = phoneField.getText();
+                if(Phone.length() == 11) {
+                    Phone = "+88" + phoneField.getText();
+                    try {
+//                        String currentPhone = currentUser.getPhone();
+                        User changeuser = User.Find(Phone);
+                        changeuser.setPhone(Phone);
+                        if (usernameField.getText() != null && !usernameField.getText().isEmpty()) {
+                            changeuser.setName(usernameField.getText());
+                        }
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+
+
+//        System.out.println("UsernameField: " + usernameField.getText() + " PhoneField: " + phoneField.getText());
         try {
             // Navigate back to the settings page
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/settings.fxml"));
