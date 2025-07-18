@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 import java.util.concurrent.CompletableFuture;
+import com.db.SignedUser;
 
 public class CreateAccountController implements Initializable {
     @FXML
@@ -71,6 +72,7 @@ public class CreateAccountController implements Initializable {
             }
         });
 loginBackBtn.setOnAction(this::loginBackHandler);
+createBtn.setOnAction(this::createBtnHandler);
 
     }
 
@@ -95,7 +97,7 @@ loginBackBtn.setOnAction(this::loginBackHandler);
     }
 
     @FXML
-    public void createBtnHandler()
+    public void createBtnHandler(ActionEvent event)
     {
         String name = nameField.getText();
         String phone = phoneField.getText();
@@ -121,7 +123,7 @@ loginBackBtn.setOnAction(this::loginBackHandler);
             if(phone.length() == 11){
             phone = "+88" + phone;
             }
-        Sender.sender.createAccount(name, phone,password, imgPath);
+        Sender.sender.createAccount(name, phone,password);
 
         // receiving the response through async function
         CompletableFuture<Response> asyncResponse = CompletableFuture.supplyAsync(() -> {
@@ -153,6 +155,7 @@ loginBackBtn.setOnAction(this::loginBackHandler);
             } else {
                 Platform.runLater(() -> {
                     try {
+                        SignedUser.Save(res.body);
                         new Page().Goto(Pages.CHAT);
                     } catch (Exception e) {
                         e.printStackTrace();

@@ -11,6 +11,8 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /*
         Request style from client
@@ -36,6 +38,11 @@ import java.util.Objects;
           URL
           "
 
+          for searching accounts
+         "SEARCH
+          NAME
+          "
+
 
         server will response the client with a status code and then payload
 
@@ -52,7 +59,7 @@ import java.util.Objects;
 
 
 */
-//import static com.Application.App.currentUser;
+
 
 public class ClientHandler {
     private Socket socket;
@@ -60,8 +67,6 @@ public class ClientHandler {
     private PrintWriter response; // response will send data to client
     private List<Socket> clients; // store all online clients
     private HashMap<String, Integer> clientMap; // for finding recienver socket with phone
-
-
 
     public ClientHandler(Socket socket, List<Socket> clients, HashMap<String, Integer> clientMap) {
         this.socket = socket;
@@ -85,7 +90,7 @@ public class ClientHandler {
                 String type = request.readLine();
                 System.out.println(type);
 
-                if(type!=null){
+                if (type != null) {
 
                     switch (type) {
                         case "MSG":
@@ -98,10 +103,13 @@ public class ClientHandler {
                         case "CREATE":
                             createUser();
                             break;
+                        case "SEARCH":
+                            searchUser();
+                            break;
 
 
                     }
-                }else{
+                } else {
 //                    System.out.println("the req is null");
                 }
 
@@ -111,6 +119,39 @@ public class ClientHandler {
 
         } catch (IOException e) {
             System.out.println("IO Error !");
+        }
+    }
+
+    private void searchUser() {
+        try {
+            String name = request.readLine();
+            String searcherPhone = request.readLine();
+            String regex = ".*" + Pattern.quote(name) + ".*";
+            Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
+            String responseString = "";
+            for (User u : User.getUsers()) {
+                Matcher matcher = pattern.matcher(u.getName());
+                if (matcher.matches()) {
+
+                    for (User blockedUser : u.getBlocklist()) {
+                        // if user has blocked searcher , we dont send
+                        if (blockedUser.getPhone().equals(searcherPhone)) {
+                            continue;
+                        }
+                    }
+
+
+                    responseString = responseString + "," + u.publicToString();
+                }
+            }
+
+            System.out.println(responseString);
+            responseString = "200\n" + responseString + "\n";
+
+            response.println(responseString);
+
+        } catch (IOException e) {
+            response.println("404");
         }
     }
 
@@ -128,6 +169,7 @@ public class ClientHandler {
             }
             int chatId = Integer.parseInt(request.readLine());
             Chat chat = new Chat(chatId);
+
             // receiver isnt online so socket not found
             if (receiverSocket.hashCode() == socket.hashCode()) {
                 chat.add(request.readLine());
@@ -135,6 +177,8 @@ public class ClientHandler {
             }
             // receiver is online
             else {
+
+
                 String msg = request.readLine();
                 chat.add(msg);
                 // sending to the receiver
@@ -171,7 +215,6 @@ public class ClientHandler {
                             "\n";
 
                     response.println(responseString);
-//                    currentUser = user;
                     return;
                 } else {
                     response.println("401");
@@ -194,9 +237,9 @@ public class ClientHandler {
             String name = request.readLine();
             String phone = request.readLine();
             String password = request.readLine();
-            String url = request.readLine();
+//            String url = request.readLine();
+            String url = "";
             User newUser = new User(name, url, phone, password);
-//            currentUser = newUser;
 
             User.Add(newUser);
 

@@ -1,7 +1,9 @@
 package com.Application;
 
 import com.api.Sender;
-import com.db.User;
+import com.client.util.Page;
+import com.client.util.Pages;
+import com.db.SignedUser;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -16,7 +18,6 @@ public class App extends Application {
 
     // making the stage global for accessing
     public static Stage globalStage;
-//    public static User currentUser; // to store current login Account
 
     @Override
     public void start(Stage stage) throws IOException {
@@ -29,18 +30,30 @@ public class App extends Application {
         stage.setTitle("Messenger");
         stage.setScene(scene);
         stage.show();
+
+        if (SignedUser.isLoggedIn()) {
+            try {
+                new Page().Goto(Pages.CHAT);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public static void main(String[] args) {
-        Socket socket = null;
+
+
         Sender sender = null;
-        try{
-            socket= new Socket("127.0.0.1", 5000);
-            sender = new Sender("Sender-Thread",socket);
+        Socket socket = null;
+
+        try {
+            socket = new Socket("127.0.0.1", 5000);
+            sender = new Sender("Sender-Thread", socket);
             sender.start();
-        }catch(IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
         }
+
 
         launch();
     }

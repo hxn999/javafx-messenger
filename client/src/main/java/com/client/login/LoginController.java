@@ -40,6 +40,8 @@ import com.api.Sender;
 import com.api.Sender;
 import javafx.stage.Stage;
 
+//import static com.Application.App.currentUser;
+
 public class LoginController implements Initializable {
     @FXML
     private TextField phone;
@@ -85,6 +87,7 @@ public class LoginController implements Initializable {
         Sender.sender.login(phoneText, passwordText);
 
         // receiving the response through async function
+        String finalPhoneText = phoneText;
         CompletableFuture<Response> asyncResponse = CompletableFuture.supplyAsync(() -> {
             Response response = null;
             try {
@@ -99,7 +102,7 @@ public class LoginController implements Initializable {
                 }
 
 
-            } catch (IOException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
             return response;
@@ -153,9 +156,6 @@ public class LoginController implements Initializable {
         }
 
     }
-
-
-
 
 }
 

@@ -134,12 +134,27 @@
                   <Image url="@../icons/icons8-photo-30.png" />
                </image>
             </ImageView>
-            <TextField prefHeight="37.0" prefWidth="457.0" promptText="Write here..." style="-fx-background-color: #596bf6;" styleClass="search-input" />
-            <ImageView fitHeight="35.0" fitWidth="35.0" styleClass="send-btn">
-               <image>
-                  <Image url="@../icons/icons8-telegram-app-50.png" />
-               </image>
-            </ImageView>
+            <TextField fx:id="messageField"
+                        prefHeight="37.0"
+                        prefWidth="457.0"
+                        promptText="Write here..."
+                        style="-fx-background-color: #596bf6;"
+                        styleClass="search-input" />
+
+            <Button fx:id="sendButton"
+                    onAction="#onSendClicked"
+                    styleClass="send-btn"
+                    prefWidth="35.0"
+                    prefHeight="35.0">
+               <graphic>
+                  <ImageView fitHeight="35.0" fitWidth="35.0">
+                     <image>
+                        <Image url="@../icons/icons8-telegram-app-50.png" />
+                     </image>
+                  </ImageView>
+               </graphic>
+            </Button>
+
          </children></HBox>
       <HBox alignment="CENTER_LEFT" layoutX="343.0" prefHeight="58.0" prefWidth="662.0" style="-fx-background-color: #3b4ef7;">
          <children>

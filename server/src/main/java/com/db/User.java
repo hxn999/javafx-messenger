@@ -22,6 +22,7 @@ public class User {
         allUsers = new ArrayList<>();
     }
 
+    public static List<User> getUsers() {return allUsers;}
     public String getName() {
         return name;
     }
@@ -124,6 +125,8 @@ public class User {
         }
         throw new Exception("User does not exists");
     }
+
+
     public static void LoadHelper() {
         // read the file
         String filePath = "server/src/main/db/users.txt";
@@ -186,10 +189,10 @@ public class User {
                 // format -> Name:Phone:Password:url:chatCount:int:int:int:int:blockCount:phone:phone:phone
                 String[] data = line.split(":");
                 // separating data
-                String name = data[0];
+//                String name = data[0];
                 String phone = data[1];
-                String password = data[2];
-                String url = data[3];
+//                String password = data[2];
+//                String url = data[3];
                 // creating chat list
                 int chatCount = Integer.parseInt(data[4]);
 //                List<Integer> tempChatList = new ArrayList<>() ;
@@ -253,4 +256,16 @@ public class User {
 
         return sb.toString();
     }
+
+    // returns user string with only name phone url
+    public String publicToString() {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append(name).append(":")
+                .append(phone).append(":")
+                .append(url);
+
+        return sb.toString();
+    }
+
 }
