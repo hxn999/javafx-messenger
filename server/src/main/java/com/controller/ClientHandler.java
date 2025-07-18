@@ -129,25 +129,24 @@ public class ClientHandler {
             String regex = ".*" + Pattern.quote(name) + ".*";
             Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
             String responseString = "";
-            for(User u:User.getUsers())
-            {
+            for (User u : User.getUsers()) {
                 Matcher matcher = pattern.matcher(u.getName());
                 if (matcher.matches()) {
 
-                    for(User blockedUser:u.getBlocklist())
-                    {
+                    for (User blockedUser : u.getBlocklist()) {
                         // if user has blocked searcher , we dont send
-                        if(blockedUser.getPhone().equals(searcherPhone)){
+                        if (blockedUser.getPhone().equals(searcherPhone)) {
                             continue;
                         }
                     }
 
 
-                    responseString+=u.publicToString();
+                    responseString = responseString + "," + u.publicToString();
                 }
             }
 
-            responseString = "200\n"+responseString+"\n";
+            System.out.println(responseString);
+            responseString = "200\n" + responseString + "\n";
 
             response.println(responseString);
 
@@ -170,6 +169,7 @@ public class ClientHandler {
             }
             int chatId = Integer.parseInt(request.readLine());
             Chat chat = new Chat(chatId);
+
             // receiver isnt online so socket not found
             if (receiverSocket.hashCode() == socket.hashCode()) {
                 chat.add(request.readLine());
@@ -177,6 +177,8 @@ public class ClientHandler {
             }
             // receiver is online
             else {
+
+
                 String msg = request.readLine();
                 chat.add(msg);
                 // sending to the receiver
