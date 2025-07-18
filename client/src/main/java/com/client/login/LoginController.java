@@ -3,6 +3,7 @@ package com.client.login;
 import com.api.Response;
 import com.client.util.Page;
 import com.client.util.Pages;
+import com.db.SignedUser;
 import com.db.User;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -61,6 +62,7 @@ public class LoginController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
+
         createAccountButton.setOnAction(this::handleCreateAccount);
     }
 
@@ -74,6 +76,10 @@ public class LoginController implements Initializable {
 
     @FXML
     public void loginHandler() {
+
+
+
+
 
         String phoneText = phone.getText();
         String passwordText = password.getText();
@@ -110,6 +116,7 @@ public class LoginController implements Initializable {
             } else {
                 Platform.runLater(() -> {
                     try {
+                        SignedUser.Save(res.body);
                         new Page().Goto(Pages.CHAT);
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -127,7 +134,6 @@ public class LoginController implements Initializable {
     @FXML
     private void handleCreateAccount(ActionEvent event) {
         try {
-
             new Page().Goto(Pages.CREATE_ACCOUNT);
         } catch (Exception e) {
             e.printStackTrace();

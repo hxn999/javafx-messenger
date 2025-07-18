@@ -22,6 +22,7 @@ public class User {
         allUsers = new ArrayList<>();
     }
 
+    public static List<User> getUsers() {return allUsers;}
     public String getName() {
         return name;
     }
@@ -255,4 +256,16 @@ public class User {
 
         return sb.toString();
     }
+
+    // returns user string with only name phone url
+    public String publicToString() {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append(name).append(":")
+                .append(phone).append(":")
+                .append(url);
+
+        return sb.toString();
+    }
+
 }

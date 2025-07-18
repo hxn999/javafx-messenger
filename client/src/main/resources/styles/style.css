@@ -251,4 +251,49 @@
 }
 
 
+.text-field.search-input {
+    -fx-padding: 0 30 0 5;
+}
+
+
+#clearSearch {
+    -fx-translate-x: -28px;
+    -fx-cursor: hand;
+}
+.search-input {
+    -fx-text-fill: #000000;           /* typed text color */
+    -fx-prompt-text-fill: #888888;    /* placeholder text color */
+}
+
+.clear-btn {
+    /* purple background */
+    -fx-background-color: #9c27b0;   /* Medium Purple */
+    -fx-background-radius: 50%;
+    -fx-padding: 5px;
+    -fx-effect: dropshadow(
+            three-pass-box,
+            rgba(0,0,0,0.2),
+            4, 0, 0, 1
+    );
+    -fx-cursor: hand;
+    -fx-alignment: center;
+}
+
+.clear-btn:hover {
+    /* slightly deeper purple on hover */
+    -fx-background-color: #7b1fa2;   /* Darker Purple */
+    -fx-effect: dropshadow(
+            three-pass-box,
+            rgba(0,0,0,0.4),
+            6, 0, 0, 2
+    );
+    -fx-scale-x: 1.1;
+    -fx-scale-y: 1.1;
+}
+
+
+
+
+
+
 

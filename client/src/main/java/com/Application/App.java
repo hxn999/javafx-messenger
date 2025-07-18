@@ -1,6 +1,9 @@
 package com.Application;
 
 import com.api.Sender;
+import com.client.util.Page;
+import com.client.util.Pages;
+import com.db.SignedUser;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -27,21 +30,29 @@ public class App extends Application {
         stage.setTitle("Messenger");
         stage.setScene(scene);
         stage.show();
+
+        if (SignedUser.isLoggedIn()) {
+            try {
+                new Page().Goto(Pages.CHAT);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public static void main(String[] args) {
-        Sender sender = null;
-        Socket socket=null;
 
-        try{
-            socket= new Socket("127.0.0.1", 5000);
-            sender = new Sender("Sender-Thread",socket);
-        }catch(IOException e){
+
+        Sender sender = null;
+        Socket socket = null;
+
+        try {
+            socket = new Socket("127.0.0.1", 5000);
+            sender = new Sender("Sender-Thread", socket);
+            sender.start();
+        } catch (IOException e) {
             e.printStackTrace();
         }
-
-        sender.start();
-
 
 
         launch();

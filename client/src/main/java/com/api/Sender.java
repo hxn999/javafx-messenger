@@ -1,5 +1,7 @@
 package com.api;
 
+import com.db.SignedUser;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -71,6 +73,14 @@ public class Sender extends Thread {
 
         request = "CREATE\n" +
                 name + "\n" + phone + "\n" + password + "\n";
+        notify();
+
+    }
+
+    public  synchronized void searchUser(String name) {
+
+        request = "SEARCH\n" +
+                name + "\n" + SignedUser.phone + "\n";
         notify();
 
     }

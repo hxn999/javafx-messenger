@@ -4,6 +4,7 @@ import com.api.Response;
 import com.api.Sender;
 import com.client.util.Page;
 import com.client.util.Pages;
+import com.db.SignedUser;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -70,6 +71,7 @@ public class CreateAccountController implements Initializable {
     public void loginBackHandler() {
         try {
             new Page().Goto(Pages.LOGIN);
+
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -113,6 +115,7 @@ public class CreateAccountController implements Initializable {
             } else {
                 Platform.runLater(() -> {
                     try {
+                        SignedUser.Save(res.body);
                         new Page().Goto(Pages.CHAT);
                     } catch (Exception e) {
                         e.printStackTrace();

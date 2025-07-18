@@ -11,6 +11,8 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /*
         Request style from client
@@ -34,6 +36,11 @@ import java.util.Objects;
           PHONE
           PASSWORD
           URL
+          "
+
+          for searching accounts
+         "SEARCH
+          NAME
           "
 
 
@@ -83,23 +90,26 @@ public class ClientHandler {
                 String type = request.readLine();
                 System.out.println(type);
 
-                if(type!=null){
+                if (type != null) {
 
-                switch (type) {
-                    case "MSG":
-                        messageSend();
-                        break;
-                    case "LOGIN":
-                        System.out.println("its login");
-                        login();
-                        break;
-                    case "CREATE":
-                        createUser();
-                        break;
+                    switch (type) {
+                        case "MSG":
+                            messageSend();
+                            break;
+                        case "LOGIN":
+                            System.out.println("its login");
+                            login();
+                            break;
+                        case "CREATE":
+                            createUser();
+                            break;
+                        case "SEARCH":
+                            searchUser();
+                            break;
 
 
-                }
-                }else{
+                    }
+                } else {
 //                    System.out.println("the req is null");
                 }
 
@@ -109,6 +119,40 @@ public class ClientHandler {
 
         } catch (IOException e) {
             System.out.println("IO Error !");
+        }
+    }
+
+    private void searchUser() {
+        try {
+            String name = request.readLine();
+            String searcherPhone = request.readLine();
+            String regex = ".*" + Pattern.quote(name) + ".*";
+            Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
+            String responseString = "";
+            for(User u:User.getUsers())
+            {
+                Matcher matcher = pattern.matcher(u.getName());
+                if (matcher.matches()) {
+
+                    for(User blockedUser:u.getBlocklist())
+                    {
+                        // if user has blocked searcher , we dont send
+                        if(blockedUser.getPhone().equals(searcherPhone)){
+                            continue;
+                        }
+                    }
+
+
+                    responseString+=u.publicToString();
+                }
+            }
+
+            responseString = "200\n"+responseString+"\n";
+
+            response.println(responseString);
+
+        } catch (IOException e) {
+            response.println("404");
         }
     }
 
