@@ -1,5 +1,6 @@
 package com.Application;
 
+import com.api.MessageReceiver;
 import com.api.Sender;
 import com.client.util.Page;
 import com.client.util.Pages;
@@ -45,11 +46,14 @@ public class App extends Application {
 
         Sender sender = null;
         Socket socket = null;
+        MessageReceiver msgReceiver = null;
 
         try {
             socket = new Socket("127.0.0.1", 5000);
             sender = new Sender("Sender-Thread", socket);
+            msgReceiver = new MessageReceiver("Receiver-Thread", socket);
             sender.start();
+            msgReceiver.start();
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -6,6 +6,7 @@ import com.api.Response;
 import com.api.Sender;
 import com.client.util.Page;
 import com.client.util.Pages;
+import com.db.ClientChat;
 import com.db.PublicUser;
 import com.db.SignedUser;
 import javafx.application.Platform;
@@ -31,6 +32,8 @@ import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public class ChatController {
@@ -45,6 +48,10 @@ public class ChatController {
     private VBox contactsBox;
     @FXML
     private VBox chatList;
+    private int chatId;
+
+    private List<ClientChat> chats;
+
 
     /**
      * This must be annotated @FXML so FXMLLoader sees it.
@@ -71,6 +78,12 @@ public class ChatController {
         clearSearch.managedProperty().bind(clearSearch.visibleProperty());
         clearSearch.mouseTransparentProperty().bind(clearSearch.visibleProperty().not());
         clearSearch.setPickOnBounds(false);
+
+
+
+        // load all chats from file
+
+//        loadAllChat();
 
     }
 
@@ -218,7 +231,63 @@ public class ChatController {
     {
         System.out.println("startChat with"+phone);
 
-        Sender.sender.sendMessage(phone,"initializing chat");
+        Sender.sender.sendMessage(phone,"initializing chat","null");
+
+    }
+
+    public void loadAllChat()
+    {
+        // requesting server to send all previous chats
+//        chats = new ArrayList<>();
+//        for (int chatId:SignedUser.chatList)
+//        {
+//            chats.add(new ClientChat(chatId));
+//        }
+
+        Sender.sender.requestChatUpdate();
+
+
+        // receiving the response through async function
+        CompletableFuture<Response> asyncResponse = CompletableFuture.supplyAsync(() -> {
+            Response response = null;
+            try {
+
+                String statusString = Sender.receive.readLine();
+                response = new Response(statusString);
+                StringBuilder receivedData = new StringBuilder();
+                String data;
+                if (response.statusCode == 200) {
+                    while (( data = Sender.receive.readLine())!=null) {
+                        receivedData.append(data);
+
+                    }
+                    response.body = receivedData.toString();
+                }
+
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return response;
+        });
+
+        asyncResponse.thenApply((res) -> {
+            System.out.println(res.body);
+//            if (res.statusCode != 200) {
+//                Platform.runLater(() -> showError("Invalid phone number or password"));
+//            } else {
+//                Platform.runLater(() -> {
+//                    try {
+//                        SignedUser.Save(res.body);
+//                        new Page().Goto(Pages.CHAT);
+//                    } catch (Exception e) {
+//                        e.printStackTrace();
+//                    }
+//                });
+//            }
+
+            return res;
+        });
 
     }
 

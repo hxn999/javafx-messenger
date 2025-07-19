@@ -42,6 +42,10 @@ import java.util.regex.Pattern;
          "SEARCH
           NAME
           "
+          for getting all chat update
+         "CHAT_UPDATE
+          PHONE
+          "
 
 
         server will response the client with a status code and then payload
@@ -106,7 +110,9 @@ public class ClientHandler {
                         case "SEARCH":
                             searchUser();
                             break;
-
+                        case "CHAT_UPDATE":
+                            chatUpdate();
+                            break;
 
                     }
                 } else {
@@ -157,9 +163,21 @@ public class ClientHandler {
 
     private void messageSend() {
         try {
-            String phone = request.readLine();
+            String chatId = request.readLine();
+            String receiverPhone = request.readLine();
+            String senderPhone = request.readLine();
+            Chat chat = null;
+
+            // need to create new chat file
+            if (chatId.equals("null")) {
+                chat = Chat.CreateChat(senderPhone, receiverPhone);
+                chatId = String.valueOf(chat.getChatId());
+            } else {
+                chat = new Chat(Integer.parseInt(chatId));
+            }
+
             Socket receiverSocket = socket;
-            int hashCode = clientMap.get(phone); // getting receiver socket hashcode
+            int hashCode = clientMap.get(receiverPhone); // getting receiver socket hashcode
             // searching receiver socket
             for (Socket soc : clients) {
                 if (soc.hashCode() == hashCode) {
@@ -167,23 +185,24 @@ public class ClientHandler {
                     break;
                 }
             }
-            int chatId = Integer.parseInt(request.readLine());
-            Chat chat = new Chat(chatId);
+
 
             // receiver isnt online so socket not found
             if (receiverSocket.hashCode() == socket.hashCode()) {
                 chat.add(request.readLine());
 
             }
-            // receiver is online
+
+            // receiver is online and socket found
             else {
 
 
                 String msg = request.readLine();
                 chat.add(msg);
+
                 // sending to the receiver
                 PrintWriter receiverResponse = new PrintWriter(receiverSocket.getOutputStream(), true);
-                receiverResponse.println(msg);
+                receiverResponse.println(chatId+"\n"+msg+"\n");
 
             }
 
@@ -255,5 +274,77 @@ public class ClientHandler {
 
     }
 
+    private void chatUpdate() {
+        try {
+            String phone = request.readLine();
+            User user = User.Find(phone);
+
+            // Get all chats for this user
+            StringBuilder chatData = new StringBuilder();
+
+            // For each chat ID in user's chat list
+            for (int chatId : user.getChatList()) {
+                Chat chat = new Chat(chatId);
+
+                // Get the chat file content
+                chat.getSentLines();
+
+                // Add chat data to response
+                chatData.append(chatId).append("\n");
+
+                // Add chat messages that haven't been sent to this user yet
+                try {
+                    long totalLines = chat.countTotalFileLines();
+                    int sentLines = 0;
+
+                    // Determine if this user is user1 or user2 in the chat
+                    if (chat.getUser1() != null && chat.getUser1().equals(phone)) {
+                        sentLines = chat.getUser1sentLines();
+                        chat.setUser1sentLines((int)totalLines);
+                    } else if (chat.getUser2() != null && chat.getUser2().equals(phone)) {
+                        sentLines = chat.getUser2sentLines();
+                        chat.setUser2sentLines((int)totalLines);
+                    }
+
+                    // Add unsent messages to response
+                    if (totalLines > sentLines) {
+                        // Read the chat file and add unsent lines
+                        java.io.File chatFile = new java.io.File(chat.getFilePath());
+                        java.util.Scanner reader = new java.util.Scanner(chatFile);
+
+                        // Skip lines that have already been sent
+                        for (int i = 0; i < sentLines; i++) {
+                            if (reader.hasNextLine()) {
+                                reader.nextLine();
+                            }
+                        }
+
+                        // Add unsent lines to response
+                        while (reader.hasNextLine()) {
+                            chatData.append(reader.nextLine()).append("\n");
+                        }
+                        reader.close();
+                    }
+
+                    // Update sent lines count
+                    chat.updateSentLines();
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                chatData.append("|\n");
+            }
+
+            // Send response to client
+            String responseString = "200\n" + chatData.toString() ;
+            response.println(responseString);
+
+        } catch (Exception e) {
+            System.out.println("500");
+            response.println("500");
+            e.printStackTrace();
+        }
+    }
 
 }

@@ -51,10 +51,14 @@ public class Sender extends Thread {
         }
     }
 
-    public synchronized void sendMessage(String receiver, String message) {
+    public synchronized void sendMessage(String receiver, String message, String chatId) {
+
         String type = "MSG";
+        System.out.println(type);
         this.request = "MSG\n" +
+                chatId + "\n" +
                 receiver + "\n" +
+                SignedUser.phone + "\n" +
                 message + "\n";
         notify();
 
@@ -62,6 +66,7 @@ public class Sender extends Thread {
 
     public synchronized void login(String phone, String password) {
         String type = "LOGIN";
+        System.out.println(type);
         request = "LOGIN\n" +
                 phone + "\n" +
                 password + "\n";
@@ -70,19 +75,26 @@ public class Sender extends Thread {
     }
 
     public synchronized void createAccount(String name, String phone, String password) {
-
+        System.out.println("createAccount");
         request = "CREATE\n" +
                 name + "\n" + phone + "\n" + password + "\n";
         notify();
 
     }
 
-    public  synchronized void searchUser(String name) {
-
+    public synchronized void searchUser(String name) {
+        System.out.println("searchUser");
         request = "SEARCH\n" +
                 name + "\n" + SignedUser.phone + "\n";
         notify();
 
+    }
+
+    public synchronized void requestChatUpdate() {
+        System.out.println("requestChatUpdate");
+        request = "CHAT_UPDATE\n" +
+                SignedUser.phone + "\n";
+        notify();
     }
 
     BufferedReader getResponse() {
