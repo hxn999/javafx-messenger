@@ -1,48 +1,97 @@
 package com.client.chat;
 
 //import com.fasterxml.jackson.core.json.DupDetector;
+
+import com.api.Response;
+import com.api.Sender;
 import com.client.util.Page;
 import com.client.util.Pages;
-import com.db.User;
+import com.db.PublicUser;
+import com.db.SignedUser;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.event.ActionEvent;            // ← JavaFX ActionEvent
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.geometry.Side;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
+import javafx.scene.text.TextFlow;
+import javafx.scene.text.Text;
+
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.concurrent.CompletableFuture;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextField;
+
 
 public class ChatController {
     public Button settingsButton;
-
     @FXML
     private ImageView searchIcon;
     @FXML
     private TextField searchField;
     @FXML
     private ImageView clearSearch;
-
     @FXML
     private VBox contactsBox;
-
+    @FXML
+    private VBox chatList;
 
     @FXML
+
     private Button dotsButton;
+
     @FXML
+
     private Button blockUserButton;  // we'll still call this if you want to reuse its handler
 
+
+
     // our ContextMenu and MenuItem
+
     private ContextMenu dotsMenu;
+
     private MenuItem blockUserItem;
+
+    private String currentChatPhone;
+
+    @FXML
+    private ImageView sendIcon;
+    @FXML
+    private TextField messageField;
+    @FXML
+    private ScrollPane messageScrollPane;
+    @FXML
+    private VBox      messageContainer;
+         // its content VBox
+    @FXML
+    private ImageView headerAvatar;            // the avatar in the header bar
+    @FXML
+    private Label   headerNameLabel;           // the username in the header bar// bottom “write here…” TextField
+    @FXML
+    private Button  sendButton;
+
+
 
     /**
      * This must be annotated @FXML so FXMLLoader sees it.
@@ -51,7 +100,6 @@ public class ChatController {
     private void initialize() {
         // optional setup after FXML is loaded
         settingsButton.setOnAction(this::onSettingsClicked);
-
 
 
         clearSearch.visibleProperty().bind(
@@ -82,6 +130,27 @@ public class ChatController {
             onBlockUserClicked();
         });
 
+
+    }
+    @FXML
+    public void onSendClicked(ActionEvent event) {
+
+//        if (currentChatPhone == null) return;
+
+        String text = messageField.getText().trim();
+        System.out.println("I am here "+text + " " + currentChatPhone);
+        if (text.isEmpty()) return;
+
+        // 1) send to server
+        Sender.sender.sendMessage(currentChatPhone, text);
+
+        // 2) echo locally
+        addMessageBubble(text, true);
+
+        // 3) clear input & scroll to bottom
+        messageField.clear();
+        Platform.runLater(() -> messageScrollPane.setVvalue(1.0));
+
     }
 
 //    @FXML
@@ -98,7 +167,6 @@ public class ChatController {
     /**
      * Use javafx.scene.input.KeyEvent, not AWT KeyEvent
      */
-    
 
 
     /**
@@ -106,12 +174,6 @@ public class ChatController {
      */
     @FXML
     private void onSettingsClicked(ActionEvent event) {
-//        try {
-//            // Load the login page
-//            new Page().Goto(Pages.SETTINGS);
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
         try {
             // Load the login page
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/settings.fxml"));
@@ -125,26 +187,190 @@ public class ChatController {
         }
     }
 
-    public void onSearchClicked(MouseEvent mouseEvent) {
+    public void onSearchClicked(ActionEvent mouseEvent) {
         String query = searchField.getText().trim();
         if(query.length() == 11){
             query = "+88" + query;
         }
-        if (mouseEvent.getSource() == searchIcon && !query.isEmpty()) {
-            System.out.println("Searching for: " + query);
-            try {
-                User u = User.Find(query);
-                System.out.println("Found user: " + u.getName());
-            } catch (Exception e) {
-                System.out.println("Error during search: " + e.getMessage());
-            }
+        if (!query.isEmpty()) {
+            // TODO: replace with your real search logic
+            Sender.sender.searchUser(query);
+
+            // receiving the response through async function
+            CompletableFuture<Response> asyncResponse = CompletableFuture.supplyAsync(() -> {
+                Response response = null;
+                try {
+
+                    String statusString = Sender.receive.readLine();
+
+                    response = new Response(statusString);
+
+                    if (response.statusCode == 200) {
+
+                        response.body = Sender.receive.readLine();
+                    }
+
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                return response;
+            });
+
+            asyncResponse.thenApply((res) -> {
+
+                System.out.println(res);
+                if (res.statusCode != 200) {
+//                    Platform.runLater(() -> showError("Invalid phone number or password"));
+                } else {
+                    Platform.runLater(() -> {
+                        try {
+                            System.out.println(res.body);
+                            showSearchResults(res.body);
+
+//
+
+
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    });
+                }
+
+                return res;
+            });
         }
+
+
     }
 
     public void onClearSearchClicked(MouseEvent mouseEvent) {
-        if(mouseEvent.getSource() == clearSearch) {
-            searchField.clear();
+        searchField.clear();
+        chatList.getChildren().clear();
+    }
+
+    public void showSearchResults(String query) {
+        chatList.getChildren().clear();
+        if (query.isEmpty()) {
+            Label label = new Label("User not found");
+            label.setStyle("-fx-text-fill: red;");
+            label.setAlignment(Pos.CENTER);
+            chatList.getChildren().add(label);
         }
+        String[] userStrings = query.split(",");
+
+        for (String userString : userStrings) {
+            if (userString.isEmpty()) continue;
+            PublicUser user = new PublicUser(userString);
+
+
+            HBox hbox = new HBox();
+            hbox.setAlignment(Pos.CENTER);
+            hbox.setPrefWidth(334);
+            hbox.setPrefHeight(72);
+            ImageView avatar = new ImageView(new Image(getClass().getResourceAsStream("/icons/icons8-avatar-80.png")));
+            avatar.setFitWidth(55);
+            avatar.setFitHeight(50);
+            VBox vbox = new VBox();
+            vbox.setPrefWidth(231);
+            vbox.setPrefHeight(100);
+            Label nameLabel = new Label(user.getName());
+            nameLabel.setPrefWidth(131);
+            nameLabel.setPrefHeight(35);
+            nameLabel.setFont(Font.font("System", FontWeight.BOLD, 16));
+            VBox.setMargin(nameLabel, new Insets(8, 0, 0, 0));
+            nameLabel.setAlignment(Pos.CENTER);
+            Label messageLabel = new Label("Click to message");
+            messageLabel.setPrefWidth(227);
+            messageLabel.setPrefHeight(18);
+            VBox.setMargin(messageLabel, new Insets(0, 0, 0, 0));
+            messageLabel.setPadding(new Insets(0, 0, 0, 15));
+            messageLabel.setAlignment(Pos.TOP_LEFT);
+            vbox.getChildren().addAll(nameLabel, messageLabel);
+            hbox.getChildren().addAll(avatar, vbox);
+            hbox.setId(user.getPhone());
+            hbox.setOnMouseClicked((event) -> {startChat(event,user.getPhone());});
+            chatList.getChildren().add(hbox);
+        }
+
+
+    }
+
+    public void startChat(MouseEvent mouseEvent,String phone)
+    {
+        this.currentChatPhone = phone;
+        System.out.println("startChat with"+phone);
+
+        Sender.sender.sendMessage(phone,"initializing chat");
+
+        // 1) Load up the PublicUser so we can show their name + avatar
+        PublicUser user = new PublicUser(currentChatPhone);
+
+        // 2) Update header
+        headerNameLabel.setText(user.getName());
+        headerAvatar.setImage(new javafx.scene.image.Image(
+                getClass().getResourceAsStream("/icons/icons8-avatar-80.png")
+        ));
+
+        // 3) Clear out old messages
+        messageContainer.getChildren().clear();
+
+        // 4) Fetch last N messages from server asynchronously
+        CompletableFuture.supplyAsync(() -> {
+            try {
+                // send a “get history” request; your protocol may differ
+                Sender.sender.sendGetHistory(phone);
+                String statusLine = Sender.receive.readLine();
+                Response resp = new Response(statusLine);
+                List<String> lines = new ArrayList<>();
+                if (resp.statusCode == 200) {
+                    // assume body lines until an empty line
+                    String line;
+                    while ((line = Sender.receive.readLine()) != null && !line.isEmpty()) {
+                        lines.add(line);
+                    }
+                }
+                return lines;
+            } catch (IOException e) {
+                e.printStackTrace();
+                return List.<String>of();
+            }
+        }).thenAccept(historyLines -> {
+            Platform.runLater(() -> {
+                for (String line : historyLines) {
+                    // assume format "SENDER_TYPE|TIMESTAMP|MESSAGE"
+                    String[] parts = line.split("\\|", 3);
+                    boolean mine = parts[0].equals("ME");
+                    String text = parts[2];
+                    addMessageBubble(text, mine);
+                }
+
+                // scroll to bottom
+                messageScrollPane.layout();
+                messageScrollPane.setVvalue(1.0);
+            });
+        });
+
+        // 5) Enable the send button
+        sendButton.setDisable(false);
+        sendButton.setOnAction(evt -> {
+            String text = messageField.getText().trim();
+            if (text.isEmpty()) return;
+            // send it to the server
+            Sender.sender.sendMessage(phone, text);
+            // echo locally
+            addMessageBubble(text, true);
+            messageField.clear();
+            messageScrollPane.setVvalue(1.0);
+        });
+
+    }
+
+    public void populateChatList()
+    {
+        chatList.getChildren().clear();
+
+
     }
 
     public void onDotsClicked() {
@@ -163,5 +389,32 @@ public class ChatController {
         // then hide the menu
         dotsMenu.hide();
     }
+
+    private void addMessageBubble(String text, boolean mine) {
+        HBox messageContainer = new HBox();
+        messageContainer.setAlignment(mine ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
+        messageContainer.setPadding(new Insets(5, 10, 5, 10));
+
+        TextFlow messageBubble = new TextFlow();
+        messageBubble.setPadding(new Insets(10));
+        messageBubble.setStyle(mine ? "-fx-background-color: #0084ff; -fx-background-radius: 15 0 15 15;" : "-fx-background-color: #e4e6eb; -fx-background-radius: 0 15 15 15;");
+
+        Text messageText = new Text(text);
+        messageText.setStyle("-fx-fill: " + (mine ? "white" : "black") + "; -fx-font-size: 14;");
+        messageBubble.getChildren().add(messageText);
+
+        // Add timestamp
+        Label timeLabel = new Label(LocalTime.now().format(DateTimeFormatter.ofPattern("hh:mm a")));
+        timeLabel.setStyle("-fx-text-fill: " + (mine ? "#aad4ff" : "#666") + "; -fx-font-size: 10;");
+
+        VBox messageContent = new VBox(5, messageBubble, timeLabel);
+        messageContent.setAlignment(mine ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
+
+        messageContainer.getChildren().add(messageContent);
+        this.messageContainer.getChildren().add(messageContainer);
+    }
+
+//    public void onSearchClicked(MouseEvent mouseEvent) {
+//    }
 }
 
