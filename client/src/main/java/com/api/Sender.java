@@ -56,7 +56,7 @@ public class Sender extends Thread {
         this.request = "MSG\n" +
                 receiver + "\n" +
                 message + "\n";
-        notify();
+        notifyAll();
 
     }
 
@@ -65,7 +65,7 @@ public class Sender extends Thread {
         request = "LOGIN\n" +
                 phone + "\n" +
                 password + "\n";
-        notify();
+        notifyAll();
 
     }
 
@@ -73,16 +73,24 @@ public class Sender extends Thread {
 
         request = "CREATE\n" +
                 name + "\n" + phone + "\n" + password + "\n";
-        notify();
+        notifyAll();
 
     }
 
-    public  synchronized void searchUser(String name) {
+    public  synchronized void searchUser(String phone) {
 
         request = "SEARCH\n" +
-                name + "\n" + SignedUser.phone + "\n";
-        notify();
+                SignedUser.name + "\n" + phone + "\n";
+        notifyAll();
     }
+
+    public synchronized void searchUserToBlock(String UserPhone,String targetPhone)
+    {
+
+        request = "SEARCHABLE\n" + UserPhone + "\n" + targetPhone + "\n";
+        notifyAll();
+    }
+
 
     BufferedReader getResponse() {
         return receive;
@@ -95,6 +103,6 @@ public class Sender extends Thread {
 
     public synchronized void sendGetHistory(String phone) {
         request = "GET_HISTORY\n" + phone + "\n";
-        notify();
+        notifyAll();
     }
 }

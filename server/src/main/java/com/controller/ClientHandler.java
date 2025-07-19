@@ -84,42 +84,47 @@ public class ClientHandler {
     }
 
     public void router() {
-        try {
-            while (true) {
+//        synchronized (this) {
+            try {
+                while (true) {
 //                System.out.println("hi");
-                String type = request.readLine();
-                System.out.println(type);
+                    String type = request.readLine();
+                    System.out.println(type);
 
-                if (type != null) {
+                    if (type != null) {
 
-                    switch (type) {
-                        case "MSG":
-                            messageSend();
-                            break;
-                        case "LOGIN":
-                            System.out.println("its login");
-                            login();
-                            break;
-                        case "CREATE":
-                            createUser();
-                            break;
-                        case "SEARCH":
-                            searchUser();
-                            break;
+                        switch (type) {
+                            case "MSG":
+                                messageSend();
+                                break;
+                            case "LOGIN":
+                                System.out.println("its login");
+                                login();
+                                break;
+                            case "CREATE":
+                                createUser();
+                                break;
+                            case "SEARCH":
+                                searchUser();
+                                break;
+                            case "SEARCHABLE":
+                                searchUserToBlock();
+                                break;
 
 
-                    }
-                } else {
+                        }
+                    } else {
 //                    System.out.println("the req is null");
-                }
+                    }
 
 
 //            System.out.println("h");
-            }
+                }
 
-        } catch (IOException e) {
-            System.out.println("IO Error !");
-        }
+            } catch (IOException e) {
+                System.out.println("IO Error !");
+            }
+//        }
     }
 
     private void searchUser() {
@@ -154,6 +159,58 @@ public class ClientHandler {
             response.println("404");
         }
     }
+
+
+
+    private void searchUserToBlock() {
+        try {
+            // Who’s doing the searching
+            String searcherPhone = request.readLine();
+            // Whom to look up
+            String targetPhone   = request.readLine();
+
+            // Find the target user in the list
+            User target = null;
+            for (User u : User.getUsers()) {
+                if (u.getPhone().equals(targetPhone)) {
+                    target = u;
+                    break;
+                }
+            }
+
+            if (target == null || target.getPhone().equals(searcherPhone)) {
+                // 404 = target not in DB
+                response.println("404");
+            } else {
+                // Check if the target has already blocked the searcher
+                boolean hasBlocked = false;
+                User currentUser = User.Find(searcherPhone);
+                for (User blockedUser : currentUser.getBlocklist()) {
+                    if (blockedUser.getPhone().equals(targetPhone)) {
+                        hasBlocked = true;
+                        break;
+                    }
+                }
+
+                if (hasBlocked) {
+                    response.println("403"); //already blocked
+                } else {
+                    // 200 = OK; send back the target’s public data
+                    response.println("200");
+                    response.println(target.publicToString());
+                }
+            }
+
+//            response.flush();
+
+        } catch (IOException e) {
+            response.println("500");
+//            response.flush();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 
     private void messageSend() {
         try {
@@ -254,6 +311,60 @@ public class ClientHandler {
         }
 
     }
+
+
+// TODO : if wanna implement later
+
+//    private void unblockUser() {
+//        try {
+//            // 1) Who’s doing the unblocking?
+//            String searcherPhone = request.readLine();
+//            // 2) Who they want to unblock
+//            String targetPhone   = request.readLine();
+//
+//            // 3) Lookup
+//            User target = null;
+//              User currentUser = User.Find(searcherPhone);
+//              for (User blockedUser : currentUser.getBlocklist()) {
+//                    if (blockedUser.getPhone().equals(targetPhone)) {
+//                        target = blockedUser;
+//                        break;
+//                    }
+//                }
+//
+//            if (target == null) {
+//                // No such user
+//                response.println("404");
+//            }
+//            else {
+//                // Try to remove the blocker entry
+//               boolean removed = false;
+//              for (User b : currentUser.getBlocklist()) {
+//                    if (b.getPhone().equals(targetPhone)) {
+//                        currentUser.getBlocklist().remove(b);
+//                         removed = true;
+//                          break;
+//                         }
+//                 }
+//                if (removed) {
+//                    // Success
+//                    response.println("200");
+//                } else {
+//                    // They weren’t blocked to begin with
+//                    response.println("409");
+//                }
+//            }
+//            response.flush();
+//
+//        } catch (IOException e) {
+//            // Unexpected I/O problem
+//            response.println("500");
+//            response.flush();
+//        } catch (Exception e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
+
 
 
 }

@@ -41,50 +41,49 @@ public class blockController implements Initializable {
         if(phoneNumber.length() == 11) {
             phoneNumber = "+88" + phoneNumber;
         }
-                // TODO: replace with your real search logic
-                Sender.sender.searchUser(phoneNumber);
 
-                // receiving the response through async function
-                CompletableFuture<Response> asyncResponse = CompletableFuture.supplyAsync(() -> {
-                    Response response = null;
-                    try {
+        if (isLoggedIn()) {
+            SignedUser signedUser = new SignedUser();
+            SignedUser.Load(); // Assuming Load() returns an instance of SignedUser
+            SignedUser.Save(signedUser.toString());
 
-                        String statusString = Sender.receive.readLine();
+            Sender.sender.searchUserToBlock(signedUser.getPhone(), phoneNumber);
+//                Sender.sender.searchUserToBlock(phoneNumber);
 
-                        response = new Response(statusString);
+            // receiving the response through async function
+            CompletableFuture<Response> asyncResponse = CompletableFuture.supplyAsync(() -> {
+                Response response = null;
+                try {
 
-                        if (response.statusCode == 200) {
+                    String statusString = Sender.receive.readLine();
 
-                            response.body = Sender.receive.readLine();
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                    response = new Response(statusString);
+
+                    if (response.statusCode == 200) {
+
+                        response.body = Sender.receive.readLine();
                     }
-                    return response;
-                });
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                return response;
+            });
 
-                asyncResponse.thenApply((res) -> {
+            asyncResponse.thenApply((res) -> {
 
-                    System.out.println(res);
-                    if (res.statusCode != 200) {
+                System.out.println(res);
+                if (res.statusCode != 200) {
 //                    Platform.runLater(() -> showError("Invalid phone number or password"));
-                    } else {
-                        Platform.runLater(() -> {
-                            try {
-                                System.out.println(res.body);
+                    blockUserButton.setDisable(true);
+                } else {
+                    Platform.runLater(() -> {
+                        blockUserButton.setDisable(false);
+                    });
+                }
 
-//
-                                blockUserButton.setDisable(false);
-
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-                        });
-                    }
-
-                    return res;
-                });
-
+                return res;
+            });
+        }
     }
 
     public void onBlockClicked() {
@@ -92,20 +91,57 @@ public class blockController implements Initializable {
         if(phoneNumber.length() == 11) {
             phoneNumber = "+88" + phoneNumber;
         }
-        User toBlock = null;
-        try {
-            toBlock = User.Find(phoneNumber);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
         if (isLoggedIn()) {
                 SignedUser signedUser = new SignedUser();
                 SignedUser.Load(); // Assuming Load() returns an instance of SignedUser
                 List<String> blockList = signedUser.getBlocklist();
-                blockList.add(String.valueOf(toBlock));
+
+            Sender.sender.searchUserToBlock(signedUser.getPhone(), phoneNumber);
+//                Sender.sender.searchUserToBlock(phoneNumber);
+
+            // receiving the response through async function
+            CompletableFuture<Response> asyncResponse = CompletableFuture.supplyAsync(() -> {
+                Response response = null;
+                try {
+
+                    String statusString = Sender.receive.readLine();
+
+                    response = new Response(statusString);
+
+                    if (response.statusCode == 200) {
+
+                        response.body = Sender.receive.readLine();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                return response;
+            });
+
+            String finalPhoneNumber = phoneNumber;
+            asyncResponse.thenApply((res) -> {
+
+                System.out.println(res);
+                if (res.statusCode != 200) {
+//                    Platform.runLater(() -> showError("Invalid phone number or password"));
+                    blockUserButton.setDisable(true);
+                } else {
+                    Platform.runLater(() -> {
+                        blockUserButton.setDisable(false);
+                        if (Page.isValidBDNumber(finalPhoneNumber)) {
+                            blockList.add(finalPhoneNumber);
+
+                        }
+                    });
+                }
+
+                return res;
+            });
+
                 signedUser.setBlocklist(blockList);
                 SignedUser.Save(signedUser.toString());
-            }
+
+        }
     }
 
 
@@ -116,4 +152,5 @@ public class blockController implements Initializable {
                 e.printStackTrace();
             }
     }
+
 }
