@@ -57,6 +57,46 @@ public class ClientChat {
 
     }
 
+    public static Chat CreateChat(String phone1,String phone2,int chatId) {
+        String newFilePath = "client/src/main/resources/db/chat-"+chatId+".txt";
+        String newSentLinesFilePath = "client/src/main/resources/db/chat-"+chatId+".txt";
+
+        File newChatFile = new File(newFilePath);
+        File newSentLinesFile = new File(newSentLinesFilePath);
+
+        try {
+            newChatFile.createNewFile();
+            newSentLinesFile.createNewFile();
+            FileWriter fw = new FileWriter(newChatFile);
+            FileWriter fw2 = new FileWriter(newSentLinesFile);
+            User user1 = User.Find(phone1);
+            User user2 = User.Find(phone2);
+            fw.write(user1.publicToString() + "\n" + user2.publicToString() + "\n");
+            fw.close();
+            fw2.write("0 0");
+            fw2.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        Chat chat = new Chat(chatId);
+
+        File chatCountFile = new File("client/src/main/resources/db/chat-"+chatId+".txt");
+
+        try {
+            FileWriter fw = new FileWriter(chatCountFile);
+
+            fw.write(String.valueOf(chatId));
+            fw.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return chat;
+
+    }
+
     public void add(String msg)
     {
         try {

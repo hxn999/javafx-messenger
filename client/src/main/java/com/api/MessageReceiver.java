@@ -51,6 +51,7 @@ public class MessageReceiver extends Thread {
                 }else{
 
                     // TODO create new chatfile and add
+                    ClientChat.CreateChat(msg,receive.readLine(),chatId);
                     System.out.println(data);
                     System.out.println("creating chat");
                 }

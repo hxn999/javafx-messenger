@@ -233,6 +233,8 @@ public class ChatController {
 
         Sender.sender.sendMessage(phone,"initializing chat","null");
 
+
+
     }
 
     public void loadAllChat()
