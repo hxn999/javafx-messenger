@@ -1,24 +1,23 @@
 package com.api;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.ObjectInputStream;
 import java.net.Socket;
+import com.server.Response;
 
 public class Receiver extends Thread {
 
     private Socket socket;
     private String type;
-    private BufferedReader receive;
-    private String data;
+    private ObjectInputStream receive;
+    private Response data;
     public static Receiver receiver;
 
     public Receiver(String name, Socket socket) {
         super(name);
         this.socket = socket;
         try {
-            this.receive = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            this.receive = new ObjectInputStream(socket.getInputStream());
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -27,29 +26,24 @@ public class Receiver extends Thread {
         this.receiver = this;
     }
 
-    private  void receive() {
+    private void receive() {
         synchronized (this) {
-
             while (true) {
-//                try {
-                    System.out.println(
-                            "waiting for data to send"
-                    );
-                    System.out.println(Thread.currentThread().getState());
+                System.out.println("waiting for data to send");
+                System.out.println(Thread.currentThread().getState());
                 try {
-                    data = receive.readLine();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-                if (data != null) {
+                    // Read Response object from server
+                    data = (Response) receive.readObject();
 
-                        System.out.println(data);
+                    if (data != null) {
+                        System.out.println("Received response: " + data);
                     }
                     System.out.println("not waiting for data to send");
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (ClassNotFoundException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }

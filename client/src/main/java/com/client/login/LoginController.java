@@ -1,9 +1,17 @@
 package com.client.login;
 
-import com.api.Response;
+import com.server.Response;
 import com.client.util.Page;
 import com.client.util.Pages;
 import com.db.SignedUser;
+import com.db.User;
+import javafx.application.Platform;
+import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
+import javafx.geometry.Pos;
+import com.server.Response;
+import com.client.util.Page;
+import com.client.util.Pages;
 import com.db.User;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -42,6 +50,10 @@ import com.api.Sender;
 import javafx.stage.Stage;
 
 public class LoginController implements Initializable {
+    @FXML
+    private TextField searchField;
+    @FXML
+    private VBox    contactsBox;
     @FXML
     private TextField phone;
     @FXML
@@ -91,14 +103,10 @@ public class LoginController implements Initializable {
         CompletableFuture<Response> asyncResponse = CompletableFuture.supplyAsync(() -> {
             Response response = null;
             try {
-                System.out.println("Hi");
-                String statusString = Sender.receive.readLine();
-                System.out.println("Hi2");
-                response = new Response(statusString);
-
-                if (response.statusCode == 200) {
-
-                    response.body = Sender.receive.readLine();
+                try {
+                    response = (Response) Sender.receive.readObject();
+                } catch (ClassNotFoundException e) {
+                    e.printStackTrace();
                 }
 
 
@@ -111,12 +119,12 @@ public class LoginController implements Initializable {
         asyncResponse.thenApply((res) -> {
 
             System.out.println(res);
-            if (res.statusCode != 200) {
+            if (res.getStatusCode() != 200) {
                 Platform.runLater(() -> showError("Invalid phone number or password"));
             } else {
                 Platform.runLater(() -> {
                     try {
-                        SignedUser.Save(res.body);
+                        SignedUser.save((User)res.getBody());
                         new Page().Goto(Pages.CHAT);
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -158,8 +166,8 @@ public class LoginController implements Initializable {
     }
 
 
-
-
 }
+
+
 
 

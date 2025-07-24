@@ -1,6 +1,8 @@
 package com;
 
+//import com.controller.ClientHandlerNew;
 import com.controller.ClientHandler;
+import com.db.Chat;
 import com.db.User;
 
 import java.io.IOException;
@@ -15,21 +17,21 @@ import java.util.concurrent.Executors;
 public class Server{
     public static void main(String[] args) {
         // loading all user data from file
-        User.Load();
-
-
-        List<Socket> clients = new ArrayList<>();
-        HashMap<String,Integer> clientMap = new HashMap<>();
+        User.loadFromFile();
+        Chat.loadAllChats();
+        HashMap<String,Socket> clientMap = new HashMap<>();
+        System.out.println(User.getAllUsers().get(0));
         ExecutorService executorService = Executors.newCachedThreadPool();
+        int clientNum = 1;
         while(true){
 
 
         try(ServerSocket serverSocket = new ServerSocket(5000)){
-            System.out.println("waiting for client");
+            System.out.println("waiting for client ...");
             Socket socket  = serverSocket.accept(); // blocking call
-            System.out.println("Server accepts client connection");
-            clients.add(socket);
-            ClientHandler clientHandler = new ClientHandler(socket,clients,clientMap);
+            System.out.println("Server accepts "+(clientNum++)+" client connection");
+
+            ClientHandler clientHandler = new ClientHandler(socket,clientMap);
             executorService.submit(clientHandler::router);
         }
 

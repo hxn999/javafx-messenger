@@ -2,13 +2,14 @@ package com.client.chat;
 
 //import com.fasterxml.jackson.core.json.DupDetector;
 
-import com.api.Response;
+
 import com.api.Sender;
+import com.client.util.Base64ImageHelper;
 import com.client.util.Page;
 import com.client.util.Pages;
-import com.db.ClientChat;
-import com.db.PublicUser;
-import com.db.SignedUser;
+//import com.db.ClientChat;
+import com.db.*;
+import com.server.Response;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.event.ActionEvent;            // ← JavaFX ActionEvent
@@ -16,12 +17,11 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.geometry.Side;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
@@ -29,14 +29,21 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 public class ChatController {
+    @FXML
     public Button settingsButton;
     @FXML
     private ImageView searchIcon;
@@ -50,8 +57,59 @@ public class ChatController {
     private VBox chatList;
     private int chatId;
 
-    private List<ClientChat> chats;
+    @FXML
 
+    private Button dotsButton;
+
+    @FXML
+
+    private Button blockUserButton;  // we'll still call this if you want to reuse its handler
+
+    @FXML
+    private ImageView userImage;
+    @FXML
+    private Label userName;
+
+
+    // our ContextMenu and MenuItem
+    @FXML
+    private ContextMenu dotsMenu;
+    @FXML
+    private MenuItem blockUserItem;
+    @FXML
+    private String currentChatPhone;
+
+    @FXML
+    private ImageView sendIcon;
+    @FXML
+    private TextField messageField;
+    @FXML
+    private ScrollPane messageScrollPane;
+    @FXML
+    private VBox messageContainer;
+    // its content VBox
+    @FXML
+    private ImageView headerAvatar;            // the avatar in the header bar
+    @FXML
+    private Label headerNameLabel;           // the username in the header bar// bottom “write here…” TextField
+    @FXML
+    private Button sendButton;
+    @FXML
+    private Label receiverName;
+    @FXML
+    private ImageView receiverImage;
+
+    // maps receiver phone to chat id
+    private Map<String,Integer> receiverMap;
+    //
+    boolean hadChat = false;
+    Integer currentChatId=null;
+    private String currentReceiverPhone;
+
+//    private List<ClientChat> chats;
+
+
+    private Map<Integer, Chat> allChats = new HashMap<>();
 
     /**
      * This must be annotated @FXML so FXMLLoader sees it.
@@ -78,12 +136,81 @@ public class ChatController {
         clearSearch.managedProperty().bind(clearSearch.visibleProperty());
         clearSearch.mouseTransparentProperty().bind(clearSearch.visibleProperty().not());
         clearSearch.setPickOnBounds(false);
+//        searchIcon.setPickOnBounds(false);
 
+        // build the popup menu
+        dotsMenu = new ContextMenu();
+        blockUserItem = new MenuItem("Block User");
+        dotsMenu.getItems().add(blockUserItem);
 
+        // what happens when "Block User" is clicked
+        blockUserItem.setOnAction(e -> {
+            onBlockUserClicked();
+        });
 
+        userName.setText(SignedUser.name);
+//        Base64ImageHelper.getImageViewFromBase64(userImage,SignedUser.url,50,50);
+//        System.out.println(SignedUser.url);
+        userImage.setImage(Base64ImageHelper.getImageViewFromBase64(SignedUser.url));
         // load all chats from file
 
 //        loadAllChat();
+        receiverMap = new HashMap<>();
+        // loading all chats
+        for (int chatId : SignedUser.chatList) {
+            Sender.sender.fetchChat(chatId);
+
+            CompletableFuture<Response> asyncResponse = CompletableFuture.supplyAsync(() -> {
+                Response response = null;
+                try {
+                    try {
+                        response = (Response) Sender.receive.readObject();
+                    } catch (ClassNotFoundException e) {
+                        e.printStackTrace();
+                    }
+
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                return response;
+            });
+
+            asyncResponse.thenApply((res) -> {
+
+                System.out.println(res);
+                if (res.getStatusCode() != 200) {
+//                Platform.runLater(() -> showError("Invalid phone number or password"));
+                } else {
+                    Platform.runLater(() -> {
+                        try {
+                            Chat chat = (Chat) res.getBody();
+                            allChats.put(chatId, chat);
+                            String receiverPhone ;
+                            if(!chat.getUser1().equals(SignedUser.phone))
+                            {
+                                receiverPhone = chat.getUser1();
+                            }else {
+                                receiverPhone = chat.getUser2();
+                            }
+
+                            receiverMap.put(receiverPhone, chatId);
+
+
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    });
+                }
+
+                return res;
+            });
+
+
+
+        }
+
+
 
     }
 
@@ -123,22 +250,18 @@ public class ChatController {
 
     public void onSearchClicked(ActionEvent mouseEvent) {
         String query = searchField.getText().trim();
+        List<User> foundUsers;
         if (!query.isEmpty()) {
-            // TODO: replace with your real search logic
+
             Sender.sender.searchUser(query);
 
-            // receiving the response through async function
             CompletableFuture<Response> asyncResponse = CompletableFuture.supplyAsync(() -> {
                 Response response = null;
                 try {
-
-                    String statusString = Sender.receive.readLine();
-
-                    response = new Response(statusString);
-
-                    if (response.statusCode == 200) {
-
-                        response.body = Sender.receive.readLine();
+                    try {
+                        response = (Response) Sender.receive.readObject();
+                    } catch (ClassNotFoundException e) {
+                        e.printStackTrace();
                     }
 
 
@@ -151,21 +274,15 @@ public class ChatController {
             asyncResponse.thenApply((res) -> {
 
                 System.out.println(res);
-                if (res.statusCode != 200) {
-//                    Platform.runLater(() -> showError("Invalid phone number or password"));
+                if (res.getStatusCode() != 200) {
+//                Platform.runLater(() -> showError("Invalid phone number or password"));
                 } else {
                     Platform.runLater(() -> {
-                        try {
-                            System.out.println(res.body);
-                            showSearchResults(res.body);
 
-//
-
-
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
+                     showSearchResults ((List<User>) res.getBody());
                     });
+
+
                 }
 
                 return res;
@@ -180,26 +297,25 @@ public class ChatController {
         chatList.getChildren().clear();
     }
 
-    public void showSearchResults(String query) {
+    public void showSearchResults(List<User> users) {
         chatList.getChildren().clear();
-        if (query.isEmpty()) {
+        if (users.isEmpty()) {
             Label label = new Label("User not found");
             label.setStyle("-fx-text-fill: red;");
             label.setAlignment(Pos.CENTER);
             chatList.getChildren().add(label);
         }
-        String[] userStrings = query.split(",");
 
-        for (String userString : userStrings) {
-            if (userString.isEmpty()) continue;
-            PublicUser user = new PublicUser(userString);
 
+        for (User user : users) {
+
+            System.out.println(user);
 
             HBox hbox = new HBox();
             hbox.setAlignment(Pos.CENTER);
             hbox.setPrefWidth(334);
             hbox.setPrefHeight(72);
-            ImageView avatar = new ImageView(new Image(getClass().getResourceAsStream("/icons/icons8-avatar-80.png")));
+            ImageView avatar = new ImageView(Base64ImageHelper.getImageViewFromBase64(user.getUrl()));
             avatar.setFitWidth(55);
             avatar.setFitHeight(50);
             VBox vbox = new VBox();
@@ -220,86 +336,180 @@ public class ChatController {
             vbox.getChildren().addAll(nameLabel, messageLabel);
             hbox.getChildren().addAll(avatar, vbox);
             hbox.setId(user.getPhone());
-            hbox.setOnMouseClicked((event) -> {startChat(event,user.getPhone());});
+            hbox.setOnMouseClicked((event) -> {
+                startChat(event,user);
+            });
             chatList.getChildren().add(hbox);
         }
 
 
     }
 
-    public void startChat(MouseEvent mouseEvent,String phone)
-    {
-        System.out.println("startChat with"+phone);
+    public void startChat(MouseEvent mouseEvent, User user) {
+//        System.out.println("startChat with"+phone);
+//
+//        Sender.sender.sendMessage(phone,"initializing chat","null");
+            receiverImage.setImage(Base64ImageHelper.getImageViewFromBase64(user.getUrl()));
+            receiverName.setText(user.getName());
+            currentReceiverPhone = user.getPhone();
+            // check if already has conversation to this user
+            Integer chatId = receiverMap.get(user.getPhone());
 
-        Sender.sender.sendMessage(phone,"initializing chat","null");
+            if(chatId != null) {
+                hadChat = true;
+                currentChatId=chatId;
+                populateChat(allChats.get(chatId));
+            }else{
+                hadChat = false;
+            }
+
+
+
+
+
+
 
 
 
     }
 
-    public void loadAllChat()
+
+    public void populateChat(Chat chat)
     {
-        // requesting server to send all previous chats
-//        chats = new ArrayList<>();
-//        for (int chatId:SignedUser.chatList)
+        for (Message msg:chat.getMessages())
+        {
+            // checking its my message or not
+            boolean mine= msg.getSender().equals(SignedUser.phone);
+            addMessageBubble(msg.getMessage(),mine);
+        }
+    }
+
+//    public void loadAllChat()
+//    {
+//        // requesting server to send all previous chats
+//       chats = new ArrayList<>();
+//       for (int chatId:SignedUser.chatList)
 //        {
 //            chats.add(new ClientChat(chatId));
 //        }
-
-        Sender.sender.requestChatUpdate();
-
-
-        // receiving the response through async function
-        CompletableFuture<Response> asyncResponse = CompletableFuture.supplyAsync(() -> {
-            Response response = null;
-            try {
-
-                String statusString = Sender.receive.readLine();
-                response = new Response(statusString);
-                StringBuilder receivedData = new StringBuilder();
-                String data;
-                if (response.statusCode == 200) {
-                    while (( data = Sender.receive.readLine())!=null) {
-                        receivedData.append(data);
-
-                    }
-                    response.body = receivedData.toString();
-                }
-
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            return response;
-        });
-
-        asyncResponse.thenApply((res) -> {
-            System.out.println(res.body);
-//            if (res.statusCode != 200) {
-//                Platform.runLater(() -> showError("Invalid phone number or password"));
-//            } else {
-//                Platform.runLater(() -> {
-//                    try {
-//                        SignedUser.Save(res.body);
-//                        new Page().Goto(Pages.CHAT);
-//                    } catch (Exception e) {
-//                        e.printStackTrace();
+//
+//        Sender.sender.requestChatUpdate();
+//
+//
+//        // receiving the response through async function
+//        CompletableFuture<Response> asyncResponse = CompletableFuture.supplyAsync(() -> {
+//            Response response = null;
+//            try {
+//
+//                String statusString = Sender.receive.readLine();
+//                response = new Response(statusString);
+//                StringBuilder receivedData = new StringBuilder();
+//                String data;
+//                if (response.statusCode == 200) {
+//                    while (( data = Sender.receive.readLine())!=null) {
+//                        receivedData.append(data);
+//
 //                    }
-//                });
+//                    response.body = receivedData.toString();
+//                }
+//
+//
+//            } catch (IOException e) {
+//                e.printStackTrace();
 //            }
+//            return response;
+//        });
+//
+//        asyncResponse.thenApply((res) -> {
+//            System.out.println(res.body);
 
-            return res;
-        });
+    /// /            if (res.statusCode != 200) {
+    /// /                Platform.runLater(() -> showError("Invalid phone number or password"));
+    /// /            } else {
+    /// /                Platform.runLater(() -> {
+    /// /                    try {
+    /// /                        SignedUser.Save(res.body);
+    /// /                        new Page().Goto(Pages.CHAT);
+    /// /                    } catch (Exception e) {
+    /// /                        e.printStackTrace();
+    /// /                    }
+    /// /                });
+    /// /            }
+//
+//            return res;
+//        });
+//
+//    }
 
-    }
 
-    public void populateChatList()
-    {
-        chatList.getChildren().clear();
-
-
-    }
 //    public void onSearchClicked(MouseEvent mouseEvent) {
 //    }
-}
+    @FXML
+    public void onSendClicked(ActionEvent event) {
 
+//        if (currentChatPhone == null) return;
+
+        String text = messageField.getText().trim();
+        System.out.println("I am here " + text + " " + currentChatPhone);
+        if (text.isEmpty()) return;
+        Message msg = new Message(SignedUser.phone,currentReceiverPhone, System.currentTimeMillis() / 1000L,text);
+        if(!hadChat) {
+            msg.setFirstMsg(true);
+        }
+        else{
+            msg.setChatId(currentChatId);
+        }
+        // 1) send to server
+        Sender.sender.sendMessage( msg);
+
+        // 2) echo locally
+        addMessageBubble(text, true);
+
+        // 3) clear input & scroll to bottom
+        messageField.clear();
+        Platform.runLater(() -> messageScrollPane.setVvalue(1.0));
+
+    }
+
+    public void onDotsClicked() {
+        blockUserButton.setVisible(false);
+        dotsMenu.show(dotsButton, Side.BOTTOM, 0, 0);
+    }
+
+    public void onBlockUserClicked() {
+        System.out.println("Blocking user...");
+        // ... your block‐user code here ...
+        try {
+            new Page().Goto(Pages.BLOCK);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        // then hide the menu
+        dotsMenu.hide();
+    }
+
+    private void addMessageBubble(String text, boolean mine) {
+        HBox messageContainer = new HBox();
+        messageContainer.setAlignment(mine ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
+        messageContainer.setPadding(new Insets(5, 10, 5, 10));
+
+        TextFlow messageBubble = new TextFlow();
+        messageBubble.setPadding(new Insets(10));
+        messageBubble.setStyle(mine ? "-fx-background-color: #0084ff; -fx-background-radius: 15 0 15 15;" : "-fx-background-color: #e4e6eb; -fx-background-radius: 0 15 15 15;");
+
+        Text messageText = new Text(text);
+        messageText.setStyle("-fx-fill: " + (mine ? "white" : "black") + "; -fx-font-size: 14;");
+        messageBubble.getChildren().add(messageText);
+
+        // Add timestamp
+        Label timeLabel = new Label(LocalTime.now().format(DateTimeFormatter.ofPattern("hh:mm a")));
+        timeLabel.setStyle("-fx-text-fill: " + (mine ? "#aad4ff" : "#666") + "; -fx-font-size: 10;");
+
+        VBox messageContent = new VBox(5, messageBubble, timeLabel);
+        messageContent.setAlignment(mine ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
+
+        messageContainer.getChildren().add(messageContent);
+        this.messageContainer.getChildren().add(messageContainer);
+    }
+
+}

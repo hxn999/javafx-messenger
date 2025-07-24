@@ -42,8 +42,6 @@ public class App extends Application {
     }
 
     public static void main(String[] args) {
-
-
         Sender sender = null;
         Socket socket = null;
         MessageReceiver msgReceiver = null;
@@ -53,12 +51,16 @@ public class App extends Application {
             sender = new Sender("Sender-Thread", socket);
             msgReceiver = new MessageReceiver("Receiver-Thread", socket);
             sender.start();
-            msgReceiver.start();
+//            msgReceiver.start();
         } catch (IOException e) {
             e.printStackTrace();
+
         }
 
 
-        launch();
+
+        System.out.println(System.currentTimeMillis());
+        System.out.println(System.getProperty("javafx.runtime.version"));
+        launch(args);
     }
 }

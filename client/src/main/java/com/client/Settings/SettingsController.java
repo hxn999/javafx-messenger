@@ -1,5 +1,8 @@
 package com.client.Settings;
 
+import com.client.util.Page;
+import com.client.util.Pages;
+import com.db.SignedUser;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -103,13 +106,8 @@ public class SettingsController implements Initializable {
     @FXML
     private void handleLogout(ActionEvent event) {
         try {
-            // Load the login page
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/login.fxml"));
-            Parent root = loader.load();
-            Scene scene = new Scene(root, 1000, 600);
-            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            stage.setScene(scene);
-            stage.show();
+            SignedUser.logout();
+            new Page().Goto(Pages.LOGIN);
         } catch (Exception e) {
             e.printStackTrace();
         }

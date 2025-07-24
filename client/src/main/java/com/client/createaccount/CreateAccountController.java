@@ -1,25 +1,40 @@
 package com.client.createaccount;
 
-import com.api.Response;
 import com.api.Sender;
+import com.client.util.DefaultImage;
+import com.client.util.ImageBase64Util;
 import com.client.util.Page;
 import com.client.util.Pages;
+
 import com.db.SignedUser;
+import com.db.User;
+import com.server.Response;
 import javafx.application.Platform;
+
+import javafx.application.Platform;
+import javafx.event.ActionEvent;
+
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 import java.util.concurrent.CompletableFuture;
+
+import com.db.SignedUser;
 
 public class CreateAccountController implements Initializable {
     @FXML
@@ -40,8 +55,11 @@ public class CreateAccountController implements Initializable {
     private Button loginBackBtn;
 
 
+    private String imageUrl;
+
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
+        System.out.println("create controller");
         URL imgUrl = getClass().getResource("/images/account-avatar.png");
         if (imgUrl == null) {
             System.err.println(">>> cannot find /images/account-avatar.png on classpath");
@@ -63,40 +81,48 @@ public class CreateAccountController implements Initializable {
                         100, 100,   // width/height
                         true, true);// preserve ratio + smooth
                 avatarPreview.setImage(img);
+                imageUrl = chosen.getAbsolutePath();
             }
         });
+        loginBackBtn.setOnAction(this::loginBackHandler);
+        createBtn.setOnAction(this::createBtnHandler);
+
     }
 
+
     @FXML
-    public void loginBackHandler() {
+    public void loginBackHandler(ActionEvent event) {
         try {
             new Page().Goto(Pages.LOGIN);
-
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+
     }
 
     @FXML
-    public void createBtnHandler()
-    {
+    public void createBtnHandler(ActionEvent event) {
         String name = nameField.getText();
         String phone = phoneField.getText();
         String password = passwordField.getText();
-        Sender.sender.createAccount(name,phone,password);
+        String url=null;
+        if(imageUrl==null){
+            url = DefaultImage.url;
+        }else{
+            url = ImageBase64Util.encodeImageToBase64(imageUrl);
+        }
+
+        Sender.sender.createAccount(name, phone, password,url);
 
         // receiving the response through async function
-        CompletableFuture<Response> asyncResponse = CompletableFuture.supplyAsync(() -> {
+
+        CompletableFuture<com.server.Response> asyncResponse = CompletableFuture.supplyAsync(() -> {
             Response response = null;
             try {
-                System.out.println("Hi");
-                String statusString = Sender.receive.readLine();
-                System.out.println("Hi2");
-                response = new Response(statusString);
-
-                if (response.statusCode == 200) {
-
-                    response.body = Sender.receive.readLine();
+                try {
+                    response = (Response) Sender.receive.readObject();
+                } catch (ClassNotFoundException e) {
+                    e.printStackTrace();
                 }
 
 
@@ -109,13 +135,12 @@ public class CreateAccountController implements Initializable {
         asyncResponse.thenApply((res) -> {
 
             System.out.println(res);
-            if (res.statusCode != 200) {
-//                Platform.runLater(() -> showError("Error Occured"));
-                System.out.println("Error");
+            if (res.getStatusCode() != 200) {
+//                Platform.runLater(() -> showError("Invalid phone number or password"));
             } else {
                 Platform.runLater(() -> {
                     try {
-                        SignedUser.Save(res.body);
+                        SignedUser.save((User) res.getBody());
                         new Page().Goto(Pages.CHAT);
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -125,6 +150,10 @@ public class CreateAccountController implements Initializable {
 
             return res;
         });
+
+
     }
+
+
 }
 

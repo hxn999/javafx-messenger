@@ -1,271 +1,102 @@
 package com.db;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.Scanner;
+import java.util.Optional;
 
-public class User {
+public class User implements Serializable {
     private String name;
     private String url;
     private String phone;
     private String password;
-    private List<User> blocklist;
+    private List<String> blocklistPhones;
     private List<Integer> chatList;
-    private static List<User> allUsers;
 
-    static {
-        allUsers = new ArrayList<>();
-    }
+    private static final String FILE_PATH = "server/src/main/db/users.dat";
+    private static final List<User> allUsers = new ArrayList<>();
 
-    public static List<User> getUsers() {return allUsers;}
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getUrl() {
-        return url;
-    }
-
-    public void setUrl(String url) {
-        this.url = url;
-    }
-
-    public String getPhone() {
-        return phone;
-    }
-
-    public void setPhone(String phone) {
-        this.phone = phone;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public List<User> getBlocklist() {
-        return blocklist;
-    }
-
-    public void setBlocklist(List<User> blocklist) {
-        this.blocklist = blocklist;
-    }
-
-    public List<Integer> getChatList() {
-        return chatList;
-    }
-
-    public void setChatList(List<Integer> chatList) {
-        this.chatList = chatList;
-    }
-
+    // Constructors
     public User(String name, String url, String phone, String password) {
         this.name = name;
         this.url = url;
         this.phone = phone;
         this.password = password;
         this.chatList = new ArrayList<>();
-        this.blocklist = new ArrayList<>();
+        this.blocklistPhones = new ArrayList<>();
     }
 
-    public User(String name, String url, String phone, String password, List<Integer> chatList, List<User> blocklist) {
-        this.name = name;
-        this.url = url;
-        this.phone = phone;
-        this.password = password;
-        this.blocklist = blocklist;
-        this.chatList = chatList;
-//        this.allUsers = new ArrayList<>();
-        // TODO initalize in a static block
+    // Getters
+    public String getName() { return name; }
+    public String getUrl() { return url; }
+    public String getPhone() { return phone; }
+    public String getPassword() { return password; }
+    public List<String> getBlocklistPhones() { return blocklistPhones; }
+    public List<Integer> getChatList() { return chatList; }
+
+    public static List<User> getAllUsers() {
+        return allUsers;
     }
 
-    public static void Add(User user) {
-        String userString = user.name + ":" + user.phone + ":" + user.password + ":" + user.url + ":" + user.chatList.size() + ":";
-        for (int cht : user.chatList) {
-            userString = userString + cht + ":";
-        }
-        userString = userString + user.blocklist.size() + ":";
-        for (User usr : user.blocklist) {
-            userString = userString + usr.phone + ":";
-        }
+    // Add and save new user
+    public static void addUser(User user) {
+        allUsers.add(user);
+        saveAllToFile();
+    }
 
-        String filePath = "server/src/main/db/users.txt";
-        File usersFile = new File(filePath);
-        FileWriter fw = null;
-        try {
-            fw = new FileWriter(usersFile, true);
-            fw.write(user.toString());
-            allUsers.add(user);
-            fw.close();
+    // Find user by phone
+    public static Optional<User> find(String phone) {
+        return allUsers.stream().filter(u -> u.phone.equals(phone)).findFirst();
+    }
+
+    // Add phone to blocklist
+    public void block(String phoneToBlock) {
+        if (!blocklistPhones.contains(phoneToBlock)) {
+            blocklistPhones.add(phoneToBlock);
+            saveAllToFile();
+        }
+    }
+    public boolean isBlocked(String phone) {
+        return blocklistPhones != null && blocklistPhones.contains(phone);
+    }
+
+    public void unblock(String phone) {
+        if (blocklistPhones != null && blocklistPhones.contains(phone)) {
+            blocklistPhones.remove(phone);
+            User.saveAllToFile(); // update the file after change
+        }
+    }
+
+    // Save all users to file
+    public static void saveAllToFile() {
+        try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(FILE_PATH))) {
+            out.writeObject(allUsers);
         } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-
-    }
-
-    public static User Find(String phone) throws Exception {
-        for (User u : allUsers) {
-
-            if (u.phone.equals(phone)) {
-                return u;
-            }
-        }
-        throw new Exception("User does not exists");
-    }
-
-
-    public static void LoadHelper() {
-        // read the file
-        String filePath = "server/src/main/db/users.txt";
-        File usersFile = new File(filePath);
-        try {
-            Scanner Reader = new Scanner(usersFile);
-            while (Reader.hasNext()) {
-                String line = Reader.nextLine();
-
-                // separating data parts
-                // format -> Name:Phone:Password:url:chatCount:int:int:int:int:blockCount:phone:phone:phone
-                String[] data = line.split(":");
-                // separating data
-                String name = data[0];
-                String phone = data[1];
-                String password = data[2];
-                String url = data[3];
-                // creating chat list
-                int chatCount = Integer.parseInt(data[4]);
-                List<Integer> tempChatList = new ArrayList<>();
-                for (int i = 5; i < (5 + chatCount); i++) {
-                    tempChatList.add(Integer.parseInt(data[i]));
-                }
-                // creating block list
-//                int blockCount = Integer.parseInt(data[5+chatCount]);
-//                List<User> tempBlockList = new ArrayList<>() ;
-//                for (int i = 6+chatCount; i < (6+ blockCount) ; i++) {
-//                    try {
-//                        User blockedUser = Find(data[i]);
-//                        tempBlockList.add(blockedUser);
-//                    } catch (Exception e) {
-//                         e.printStackTrace();
-//                    }
-//                }
-                // making blocklist null because first the users need to be loaded
-                User temp = new User(name, url, phone, password, tempChatList, null);
-                allUsers.add(temp);
-                //putting into treemap
-
-
-            }
-
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            System.err.println("Error saving users: " + e.getMessage());
         }
     }
 
-    public static void Load() {
-        // loading all users first
-        LoadHelper();
-        // read the file
-        String filePath = "server/src/main/db/users.txt";
-        File usersFile = new File(filePath);
-        try {
-            Scanner Reader = new Scanner(usersFile);
-            while (Reader.hasNext()) {
-                String line = Reader.nextLine();
+    // Load all users from file
+    public static void loadFromFile() {
+        File file = new File(FILE_PATH);
+        if (!file.exists()) return;
 
-                // separating data parts
-                // format -> Name:Phone:Password:url:chatCount:int:int:int:int:blockCount:phone:phone:phone
-                String[] data = line.split(":");
-                // separating data
-//                String name = data[0];
-                String phone = data[1];
-//                String password = data[2];
-//                String url = data[3];
-                // creating chat list
-                int chatCount = Integer.parseInt(data[4]);
-//                List<Integer> tempChatList = new ArrayList<>() ;
-//                for (int i = 5; i < (5+ chatCount) ; i++) {
-//                    tempChatList.add( Integer.parseInt(data[i]) );
-//                }
-                // creating block list
-                int blockCount = Integer.parseInt(data[5 + chatCount]);
-                System.out.println(blockCount);
-                List<User> tempBlockList = new ArrayList<>();
-                for (int i = 6 + chatCount; i < (6 + chatCount + blockCount); i++) {
-                    try {
-                        User blockedUser = Find(data[i]);
-
-                        tempBlockList.add(blockedUser);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-                // making blocklist null because first the users need to be loaded
-//                User temp = new User(name,url,phone,password,tempChatList,null);
-
-                try {
-                    Find(phone).setBlocklist(tempBlockList);
-                } catch (Exception e) {
-
-                    throw new RuntimeException(e);
-                }
-                //putting into treemap
-
-
-            }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
+        try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(file))) {
+            List<User> loaded = (List<User>) in.readObject();
+            allUsers.clear();
+            allUsers.addAll(loaded);
+        } catch (IOException | ClassNotFoundException e) {
+            System.err.println("Error loading users: " + e.getMessage());
         }
+    }
+
+    // For public display (name, phone, url)
+    public String publicToString() {
+        return name + ":" + phone + ":" + url;
     }
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-
-        sb.append(name).append(":")
-                .append(phone).append(":")
-                .append(password).append(":")
-                .append(url).append(":");
-
-        // Chat list count and values
-        sb.append(chatList.size());
-        for (int chatId : chatList) {
-            sb.append(":").append(chatId);
-        }
-
-        // Block list count and phone numbers
-        if (blocklist != null) {
-
-            sb.append(":").append(blocklist.size());
-            for (User u : blocklist) {
-                sb.append(":").append(u.phone);
-            }
-        }
-
-        return sb.toString();
+        return "User{name='" + name + "', phone='" + phone + "'}";
     }
-
-    // returns user string with only name phone url
-    public String publicToString() {
-        StringBuilder sb = new StringBuilder();
-
-        sb.append(name).append(":")
-                .append(phone).append(":")
-                .append(url);
-
-        return sb.toString();
-    }
-
 }

@@ -1,200 +1,88 @@
 package com.db;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.Locale;
-import java.util.Scanner;
-import java.util.TreeMap;
+import java.util.*;
 
-public class Chat {
+public class Chat implements Serializable {
     private int chatId;
     private String user1;
     private String user2;
-    private String filePath;
-    private File chatFile;
-    private static int chatCount;
-    // will store all messages sorted by timestamp
-    private TreeMap<Long, String> chats;
+    private List<Message> messages;
 
-    // tracks how much lines from the chat file has sent to user1
-    private int user1sentLines;
-    // tracks how much lines from the chat file has sent to user2
-    private int user2sentLines;
+    private static final String FILE_PATH = "server/src/main/db/chats.dat";
+    private static final Map<Integer, Chat> allChats = new HashMap<>();
+    private static int chatCount = 0;
 
-    static {
-        File chatCountFile = new File("server/src/main/db/totalChatCount.txt");
-
-        try {
-            Scanner chatCountScanner = new Scanner(chatCountFile);
-            chatCount = chatCountScanner.nextInt();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-
-    }
-
-    public TreeMap<Long, String> getChats() {
-        return chats;
-    }
-
-    public void setChats(TreeMap<Long, String> chats) {
-        this.chats = chats;
-    }
-
-    public Chat(int chatId) {
-
+    // Constructors
+    public Chat(int chatId, String user1, String user2) {
         this.chatId = chatId;
-        chats = new TreeMap<>();
-
-        // read the file
-        this.filePath = "server/src/main/db/chat-" + chatId + ".txt";
-        this.chatFile = new File(filePath);
-        try {
-            Scanner Reader = new Scanner(chatFile);
-            while (Reader.hasNext()) {
-                String line = Reader.nextLine();
-
-                // separating timestamp and message
-                int timestampIndex = line.lastIndexOf(':');
-                String message = line.substring(0, timestampIndex);
-                String timestampString = line.substring(timestampIndex + 1, line.length());
-                long timestamp = Integer.parseInt(timestampString);
-
-                //putting into treemap
-                chats.put(timestamp, message);
-
-            }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-
-
-    }
-
-    public void add(String msg) {
-        try {
-            FileWriter fw = new FileWriter(chatFile, true);
-            fw.write(msg);
-        } catch (IOException e) {
-            System.out.println("Appending failed");
-        }
-    }
-
-    public static Chat CreateChat(String phone1,String phone2) {
-        String newFilePath = "server/src/main/db/chat-" + chatCount + ".txt";
-        String newSentLinesFilePath = "server/src/main/db/chat-" + chatCount +"-sentLines.txt";
-
-        File newChatFile = new File(newFilePath);
-        File newSentLinesFile = new File(newSentLinesFilePath);
-
-        try {
-            newChatFile.createNewFile();
-            newSentLinesFile.createNewFile();
-            FileWriter fw = new FileWriter(newChatFile);
-            FileWriter fw2 = new FileWriter(newSentLinesFile);
-            User user1 = User.Find(phone1);
-            User user2 = User.Find(phone2);
-            fw.write(user1.publicToString() + "\n" + user2.publicToString() + "\n");
-            fw.close();
-            fw2.write("0 0");
-            fw2.close();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        Chat chat = new Chat(chatCount);
-
-        File chatCountFile = new File("server/src/main/db/totalChatCount.txt");
-
-        try {
-            FileWriter fw = new FileWriter(chatCountFile);
-
-            fw.write(String.valueOf(chatCount));
-            fw.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return chat;
-
-    }
-
-    public void updateSentLines() {
-        String newSentLinesFilePath = "server/src/main/db/chat-" + chatCount +"-sentLines.txt";
-        File newSentLinesFile = new File(newSentLinesFilePath);
-        try {
-            FileWriter fw = new FileWriter(newSentLinesFile);
-            String updatedSentLines = user1sentLines+" "+user2sentLines;
-            fw.write(updatedSentLines);
-            fw.close();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public long countTotalFileLines() throws IOException {
-        return Files.lines(chatFile.toPath()).count();
-    }
-
-    public void getSentLines()
-    {
-        String newSentLinesFilePath = "server/src/main/db/chat-" + chatCount +"-sentLines.txt";
-        File newSentLinesFile = new File(newSentLinesFilePath);
-        try {
-            Scanner reader = new Scanner(newSentLinesFile);
-            user1sentLines = reader.nextInt();
-            user2sentLines = reader.nextInt();
-            reader.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-
-    }
-
-    public int getChatId() {
-        return chatId;
-    }
-
-    public void setChatId(int chatId) {
-        this.chatId = chatId;
-    }
-
-    public String getUser1() {
-        return user1;
-    }
-
-    public void setUser1(String user1) {
         this.user1 = user1;
-    }
-
-    public String getUser2() {
-        return user2;
-    }
-
-    public void setUser2(String user2) {
         this.user2 = user2;
+        this.messages = new ArrayList<>();
     }
 
-    public int getUser1sentLines() {
-        return user1sentLines;
+    // Getters
+    public int getChatId() { return chatId; }
+    public String getUser1() { return user1; }
+    public String getUser2() { return user2; }
+    public List<Message> getMessages() { return messages; }
+
+    public static Map<Integer, Chat> getAllChats() {
+        return allChats;
     }
 
-    public void setUser1sentLines(int user1sentLines) {
-        this.user1sentLines = user1sentLines;
+    // Add message to a chat
+    public void addMessage(Message message) {
+        messages.add(message);
+        saveAllChats();
     }
 
-    public int getUser2sentLines() {
-        return user2sentLines;
+    // Create a new chat and store it
+    public static Chat createChat(String phone1, String phone2) {
+        Chat chat = new Chat(chatCount++, phone1, phone2);
+        allChats.put(chat.chatId, chat);
+        saveAllChats();
+        return chat;
     }
 
-    public void setUser2sentLines(int user2sentLines) {
-        this.user2sentLines = user2sentLines;
+    // Find chat by ID
+    public static Chat findChat(int chatId) throws Exception {
+        if (!allChats.containsKey(chatId))
+            throw new Exception("Chat not found.");
+        return allChats.get(chatId);
     }
 
-    public String getFilePath() {
-        return filePath;
+    // Save all chats to file
+    public static void saveAllChats() {
+        try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(FILE_PATH))) {
+            out.writeObject(allChats);
+        } catch (IOException e) {
+            System.err.println("Error saving chats: " + e.getMessage());
+        }
+    }
+
+    // Load all chats on server startup
+    public static void loadAllChats() {
+        File file = new File(FILE_PATH);
+        if (!file.exists()) return;
+
+        try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(file))) {
+            Map<Integer, Chat> loadedChats = (Map<Integer, Chat>) in.readObject();
+            allChats.clear();
+            allChats.putAll(loadedChats);
+            // Update chatCount so IDs stay unique
+            chatCount = allChats.keySet().stream().max(Integer::compareTo).orElse(0) + 1;
+        } catch (IOException | ClassNotFoundException e) {
+            System.err.println("Error loading chats: " + e.getMessage());
+        }
+    }
+
+    // Optional: Print messages (for debugging)
+    public void printMessages() {
+        for (Message msg : messages) {
+            System.out.println("[" + msg.getTimestamp() + "] " +
+                    msg.getSender() + " → " + msg.getReceiver() + ": " +
+                    msg.getMessage());
+        }
     }
 }

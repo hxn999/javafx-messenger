@@ -1,7 +1,7 @@
 package com.api;
 
 import com.db.Chat;
-import com.db.ClientChat;
+//import com.db.ClientChat;
 import com.db.SignedUser;
 
 import java.io.BufferedReader;
@@ -47,11 +47,11 @@ public class MessageReceiver extends Thread {
                 // checking chat exits or not
                 if (SignedUser.chatList!=null&&SignedUser.chatList.contains(chatId)) {
 
-                    new ClientChat(chatId).add(msg);
+//                    new ClientChat(chatId).add(msg);
                 }else{
 
                     // TODO create new chatfile and add
-                    ClientChat.CreateChat(msg,receive.readLine(),chatId);
+//                    ClientChat.CreateChat(msg,receive.readLine(),chatId);
                     System.out.println(data);
                     System.out.println("creating chat");
                 }

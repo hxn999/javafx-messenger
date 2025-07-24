@@ -14,7 +14,9 @@ public class Page {
 
 
     // changes page
+
     public  void Goto(Pages page) throws Exception {
+
 
         FXMLLoader loader = null;
         switch (page) {
@@ -31,14 +33,28 @@ public class Page {
                 loader = new FXMLLoader(getClass().getResource("/views/chat.fxml"));
                 break;
 
+            case BLOCK:
+                loader = new FXMLLoader(getClass().getResource("/views/blockUser.fxml"));
+                break;
         }
-
 
         Parent root = loader.load();
         Scene scene = new Scene(root, 1000, 600);
+
+
         globalStage.setScene(scene);
         globalStage.show();
     }
 
+
+    public static boolean isValidBDNumber(String phone) {
+        if (phone.startsWith("+880")) {
+            return phone.length() == 14 && phone.substring(4).chars().allMatch(Character::isDigit);
+        }
+        if (phone.startsWith("01")) {
+            return phone.length() == 11 && phone.chars().allMatch(Character::isDigit);
+        }
+        return false;
+    }
 
 }

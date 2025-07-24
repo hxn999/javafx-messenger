@@ -71,7 +71,11 @@
     -fx-pref-width: max-content;
 }
 .search-input{
+
   -fx-border-width: none;
+
+    -fx-border-width: none;
+
     -fx-background-color: transparent;
     -fx-text-fill: white;
     -fx-font-size: 16px;
@@ -256,6 +260,7 @@
 }
 
 
+
 #clearSearch {
     -fx-translate-x: -28px;
     -fx-cursor: hand;
@@ -296,4 +301,73 @@
 
 
 
+
+#clearSearch {
+    -fx-translate-x: -28px;
+    -fx-cursor: hand;
+}
+.search-input {
+    -fx-text-fill: #000000;           /* typed text color */
+    -fx-prompt-text-fill: #888888;    /* placeholder text color */
+}
+
+.clear-btn {
+    /* purple background */
+    -fx-background-color: #9c27b0;   /* Medium Purple */
+    -fx-background-radius: 50%;
+    -fx-padding: 5px;
+    -fx-effect: dropshadow(
+            three-pass-box,
+            rgba(0,0,0,0.2),
+            4, 0, 0, 1
+    );
+    -fx-cursor: hand;
+    -fx-alignment: center;
+}
+
+.clear-btn:hover {
+    /* slightly deeper purple on hover */
+    -fx-background-color: #7b1fa2;   /* Darker Purple */
+    -fx-effect: dropshadow(
+            three-pass-box,
+            rgba(0,0,0,0.4),
+            6, 0, 0, 2
+    );
+    -fx-scale-x: 1.1;
+    -fx-scale-y: 1.1;
+}
+
+
+.block-user-btn {
+    -fx-background-color: #e74c3c; /* Soft red */
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 20;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 4, 0.1, 0, 2);
+    -fx-border-color: transparent;
+    -fx-border-radius: 20;
+    -fx-padding: 5 15 5 15;
+    -fx-transition: all 0.3s ease-in-out;
+}
+
+/* Hover effect */
+.block-user-btn:hover {
+    -fx-background-color: #c0392b; /* Darker red */
+    -fx-scale-x: 1.05;
+    -fx-scale-y: 1.05;
+}
+
+.user-img{
+    -fx-border-width: 2px ;
+    -fx-border-color: white;
+    -fx-border-radius: 25px;
+    -fx-background-radius: 25px;
+}
+
+.name-text{
+    -fx-text-fill: white;
+    -fx-font-size: 16px;
+}
 

@@ -1,16 +1,14 @@
 package com.controller;
 
+import com.api.Data;
 import com.db.Chat;
+import com.db.Message;
 import com.db.User;
+import com.server.Response;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -67,149 +65,168 @@ import java.util.regex.Pattern;
 
 public class ClientHandler {
     private Socket socket;
-    private BufferedReader request; // request will receive client data
-    private PrintWriter response; // response will send data to client
-    private List<Socket> clients; // store all online clients
-    private HashMap<String, Integer> clientMap; // for finding recienver socket with phone
+    private ObjectInputStream request; // request will receive client data
+    private ObjectOutputStream response; // response will send data to client
+    private HashMap<String, Socket> clientMap; // for finding receiver socket with phone
+    private Response clientResponse;
 
-    public ClientHandler(Socket socket, List<Socket> clients, HashMap<String, Integer> clientMap) {
+
+    // Helper method to send responses
+    private void sendResponse(String body, int statusCode) {
+        try {
+            Response serverResponse = new Response("server", body, statusCode);
+            response.writeObject(serverResponse);
+            response.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public ClientHandler(Socket socket, HashMap<String, Socket> clientMap) {
         this.socket = socket;
-        this.clients = clients;
         this.clientMap = clientMap;
 
-        // setting up streams for send and recieve
+        // setting up streams for send and receive
         try {
-            this.request = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            this.response = new PrintWriter(socket.getOutputStream(), true);
+            this.response = new ObjectOutputStream(socket.getOutputStream());
+            this.request = new ObjectInputStream(socket.getInputStream());
         } catch (IOException e) {
             System.out.println("Stream Error !");
+            e.printStackTrace();
         }
-
     }
 
     public void router() {
         try {
             while (true) {
-//                System.out.println("hi");
-                String type = request.readLine();
-                System.out.println(type);
+                // Read Response object from client
+                clientResponse = (Response) request.readObject();
+                System.out.println("Received request: " + clientResponse);
 
-                if (type != null) {
+                if (clientResponse != null) {
 
-                    switch (type) {
-                        case "MSG":
+                    switch (clientResponse.getPath()) {
+                        case MSG:
                             messageSend();
                             break;
-                        case "LOGIN":
-                            System.out.println("its login");
+                        case LOGIN:
                             login();
                             break;
-                        case "CREATE":
+                        case CREATE_ACCOUNT:
                             createUser();
                             break;
-                        case "SEARCH":
+                        case SEARCH:
                             searchUser();
                             break;
-                        case "CHAT_UPDATE":
-                            chatUpdate();
+                        case BLOCK:
+                            block();
                             break;
-
+                        case UNBLOCK:
+                            unBlock();
+                            break;
+                        case CHAT:
+                            chatFetch();
+                            break;
                     }
                 } else {
-//                    System.out.println("the req is null");
+                    System.out.println("The request is null");
                 }
-
-
-//            System.out.println("h");
             }
-
         } catch (IOException e) {
-            System.out.println("IO Error !");
+            System.out.println("IO Error!");
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            System.out.println("Class not found!");
+            e.printStackTrace();
         }
     }
 
     private void searchUser() {
-        try {
-            String name = request.readLine();
-            String searcherPhone = request.readLine();
-            String regex = ".*" + Pattern.quote(name) + ".*";
-            Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
-            String responseString = "";
-            for (User u : User.getUsers()) {
-                Matcher matcher = pattern.matcher(u.getName());
-                if (matcher.matches()) {
 
-                    for (User blockedUser : u.getBlocklist()) {
-                        // if user has blocked searcher , we dont send
-                        if (blockedUser.getPhone().equals(searcherPhone)) {
-                            continue;
-                        }
+
+
+
+        try {
+
+            Data body = (Data) clientResponse.getBody();
+            List<User> foundUsers = new ArrayList<>();
+            // using regular expression to find names
+            String regex = ".*" + Pattern.quote(body.recieverName) + ".*";
+            Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
+
+            for (User u : User.getAllUsers()) {
+                Matcher matcher = pattern.matcher(u.getName());
+                // if name matched and its not the sender
+                if (matcher.matches() && !u.getPhone().equals(clientResponse.getSender())) {
+
+                    if(!u.isBlocked(body.phone))
+                    {
+                        System.out.println(u.getName());
+                        foundUsers.add(u);
                     }
 
 
-                    responseString = responseString + "," + u.publicToString();
+
+
                 }
             }
 
-            System.out.println(responseString);
-            responseString = "200\n" + responseString + "\n";
+            response.writeObject(new Response("server",foundUsers,200));
 
-            response.println(responseString);
+        } catch (Exception e) {
 
-        } catch (IOException e) {
-            response.println("404");
         }
+
     }
 
     private void messageSend() {
         try {
-            String chatId = request.readLine();
-            String receiverPhone = request.readLine();
-            String senderPhone = request.readLine();
-            Chat chat = null;
+            Message msg = (Message) clientResponse.getBody();
 
-            // need to create new chat file
-            if (chatId.equals("null")) {
-                chat = Chat.CreateChat(senderPhone, receiverPhone);
-                chatId = String.valueOf(chat.getChatId());
-            } else {
-                chat = new Chat(Integer.parseInt(chatId));
+            // checking if user is blocked or not
+
+            Optional<User> mUser = User.find(msg.getReceiver());
+            if (mUser.isPresent()) {
+                User user = mUser.get();
+                if (user.isBlocked(msg.getSender())) {
+                    // receiver blocked user , nothing to send or save
+                    response.writeObject(new Response(500));
+                    return;
+                }
+            }
+            // if its the starting of the chat
+            Chat chat=null;
+            if(msg.isFirstMsg())
+            {
+               chat= Chat.createChat(msg.getReceiver(),msg.getSender());
+                msg.setChatId(chat.getChatId());
             }
 
-            Socket receiverSocket = socket;
-            int hashCode = clientMap.get(receiverPhone); // getting receiver socket hashcode
-            // searching receiver socket
-            for (Socket soc : clients) {
-                if (soc.hashCode() == hashCode) {
-                    receiverSocket = soc;
-                    break;
+
+            Socket receiverSocket = clientMap.get(msg.getReceiver());
+            ObjectOutputStream receiverStream = new ObjectOutputStream(receiverSocket.getOutputStream());
+
+            if(!msg.isFirstMsg())
+            {
+
+                chat = Chat.findChat(msg.getChatId());
+            }
+
+            chat.addMessage(msg);
+
+
+            // receiver is online
+            if (receiverSocket != null) {
+                if (msg.isFirstMsg()) {
+                    // sending full chat file if its the start of conversation
+                    receiverStream.writeObject(chat);
+                } else {
+                    receiverStream.writeObject(msg);
                 }
             }
 
 
-            // receiver isnt online so socket not found
-            if (receiverSocket.hashCode() == socket.hashCode()) {
-                chat.add(request.readLine());
-
-            }
-
-            // receiver is online and socket found
-            else {
-
-
-                String msg = request.readLine();
-                chat.add(msg);
-
-                // sending to the receiver
-                PrintWriter receiverResponse = new PrintWriter(receiverSocket.getOutputStream(), true);
-                receiverResponse.println(chatId+"\n"+msg+"\n");
-
-            }
-
-            PrintWriter receiverResponse = new PrintWriter(receiverSocket.getOutputStream(), true);
-
-
-        } catch (IOException e) {
+        } catch (Exception e) {
 
         }
 
@@ -218,133 +235,106 @@ public class ClientHandler {
 
     private void login() {
         try {
-            String phone = request.readLine();
-            String password = request.readLine();
+            Data body = (Data) clientResponse.getBody();
 
-            System.out.println(phone);
-            System.out.println(password);
+            Optional<User> mUser = User.find(body.phone);
+
+            if (!mUser.isPresent()) {
 
 
-            try {
-                User user = User.Find(phone);
-                if (Objects.equals(user.getPassword(), password)) {
-                    String userString = user.toString();
-                    String responseString = "200\n" +
-                            userString +
-                            "\n";
+                response.writeObject(new Response(500));
+                return;
 
-                    response.println(responseString);
-                    return;
-                } else {
-                    response.println("401");
-                }
-            } catch (Exception e) {
-                response.println("404");
+            }
+            User user = mUser.get();
+
+            if (user.getPassword().equals(body.password)) {
+                response.writeObject(new Response("server",user,200));
+                clientMap.put(user.getPhone(), socket);
+            } else {
+                response.writeObject(new Response(500));
             }
 
 
         } catch (IOException e) {
-            System.out.println("500");
+            e.printStackTrace();
         }
+
 
     }
 
     private void createUser() {
 
         try {
-            System.out.println("hi create");
-            String name = request.readLine();
-            String phone = request.readLine();
-            String password = request.readLine();
-//            String url = request.readLine();
-            String url = "";
-            User newUser = new User(name, url, phone, password);
-
-            User.Add(newUser);
-
-            String userString = newUser.toString();
-            String responseString = "200\n" +
-                    userString +
-                    "\n";
-
-            response.println(responseString);
-        } catch (IOException e) {
-            response.println("500");
-        }
-
-    }
-
-    private void chatUpdate() {
-        try {
-            String phone = request.readLine();
-            User user = User.Find(phone);
-
-            // Get all chats for this user
-            StringBuilder chatData = new StringBuilder();
-
-            // For each chat ID in user's chat list
-            for (int chatId : user.getChatList()) {
-                Chat chat = new Chat(chatId);
-
-                // Get the chat file content
-                chat.getSentLines();
-
-                // Add chat data to response
-                chatData.append(chatId).append("\n");
-
-                // Add chat messages that haven't been sent to this user yet
-                try {
-                    long totalLines = chat.countTotalFileLines();
-                    int sentLines = 0;
-
-                    // Determine if this user is user1 or user2 in the chat
-                    if (chat.getUser1() != null && chat.getUser1().equals(phone)) {
-                        sentLines = chat.getUser1sentLines();
-                        chat.setUser1sentLines((int)totalLines);
-                    } else if (chat.getUser2() != null && chat.getUser2().equals(phone)) {
-                        sentLines = chat.getUser2sentLines();
-                        chat.setUser2sentLines((int)totalLines);
-                    }
-
-                    // Add unsent messages to response
-                    if (totalLines > sentLines) {
-                        // Read the chat file and add unsent lines
-                        java.io.File chatFile = new java.io.File(chat.getFilePath());
-                        java.util.Scanner reader = new java.util.Scanner(chatFile);
-
-                        // Skip lines that have already been sent
-                        for (int i = 0; i < sentLines; i++) {
-                            if (reader.hasNextLine()) {
-                                reader.nextLine();
-                            }
-                        }
-
-                        // Add unsent lines to response
-                        while (reader.hasNextLine()) {
-                            chatData.append(reader.nextLine()).append("\n");
-                        }
-                        reader.close();
-                    }
-
-                    // Update sent lines count
-                    chat.updateSentLines();
-
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-                chatData.append("|\n");
+            User newUser = (User) clientResponse.getBody();
+            Optional<User> mUser = User.find(newUser.getPhone());
+            if (mUser.isPresent()) {
+                response.writeObject(new Response(500));
+                return;
             }
+            User.addUser(newUser);
+            response.writeObject(new Response("server",newUser,200));
+            clientMap.put(newUser.getPhone(), socket);
 
-            // Send response to client
-            String responseString = "200\n" + chatData.toString() ;
-            response.println(responseString);
-
-        } catch (Exception e) {
-            System.out.println("500");
-            response.println("500");
+        } catch (IOException e) {
             e.printStackTrace();
         }
+
     }
 
+    private void chatFetch() {
+        try {
+
+            Data body = (Data) clientResponse.getBody();
+
+            Chat chat = Chat.findChat(body.chatId);
+
+            response.writeObject(new Response("server", chat, 200));
+
+
+        } catch (Exception e) {
+            try {
+                response.writeObject(new Response(500));
+            } catch (IOException ex) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
+    private void block() {
+        try {
+
+            Data body = (Data) clientResponse.getBody();
+
+            Optional<User> mUser = User.find(body.phone);
+            if (mUser.isPresent()) {
+                User user = mUser.get();
+                user.block(body.receiverPhone);
+            }
+
+
+        } catch (Exception e) {
+
+        }
+    }
+    private void unBlock() {
+        try {
+
+            Data body = (Data) clientResponse.getBody();
+
+            Optional<User> mUser = User.find(body.phone);
+            if (mUser.isPresent()) {
+                User user = mUser.get();
+                user.unblock(body.receiverPhone);
+            }
+
+
+        } catch (Exception e) {
+
+        }
+    }
+
+
 }
+
