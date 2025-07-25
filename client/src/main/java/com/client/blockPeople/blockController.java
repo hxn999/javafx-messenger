@@ -1,156 +1,128 @@
-package com.client.blockPeople;
-
-//import com.api.Response;
-import com.api.Sender;
-import com.client.util.Page;
-import com.client.util.Pages;
-import com.db.SignedUser;
-import com.db.User;
-import javafx.application.Platform;
-import javafx.event.ActionEvent;
-import javafx.fxml.Initializable;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
-
-import java.io.IOException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ResourceBundle;
-import java.util.concurrent.CompletableFuture;
-//import static com.Application.App.currentUser;
-import static com.db.SignedUser.isLoggedIn;
-import static java.lang.System.exit;
-
-public class blockController implements Initializable {
-    public TextField phoneNumberField;
-    public Label userInfoLabel;
-    public Button blockUserButton;
-    public Button ChatBackBtn;
-
-
-    @Override
-    public void initialize(URL url, ResourceBundle resourceBundle) {
-
-    }
-
-
+//package com.client.blockPeople;
+//
+//import com.server.Response;
+//import com.api.Sender;
+//import com.client.util.Page;
+//import com.client.util.Pages;
+//import com.db.SignedUser;
+//import com.db.User;
+//import javafx.application.Platform;
+//import javafx.event.ActionEvent;
+//import javafx.fxml.Initializable;
+//import javafx.scene.control.Button;
+//import javafx.scene.control.Label;
+//import javafx.scene.control.TextField;
+//
+//import java.io.IOException;
+//import java.net.URL;
+//import java.util.ResourceBundle;
+//import java.util.concurrent.CompletableFuture;
+//
+//import static com.api.Sender.receive;
+//import static com.db.SignedUser.isLoggedIn;
+//
+//public class blockController implements Initializable {
+//    public TextField phoneNumberField;
+//    public Label userInfoLabel;
+//    public Button blockUserButton;
+//    public Button ChatBackBtn;
+//
+//    @Override
+//    public void initialize(URL url, ResourceBundle resourceBundle) {
+//        // Initially disable block button until a user is found
+//        blockUserButton.setDisable(true);
+//    }
+//
 //    public void onSearchClicked() {
-//        String phoneNumber = phoneNumberField.getText();
-//        if(phoneNumber.length() == 11) {
+//        String phoneNumber = phoneNumberField.getText().trim();
+//        if (phoneNumber.length() == 11) {
 //            phoneNumber = "+88" + phoneNumber;
 //        }
 //
-//        if (isLoggedIn()) {
-//            SignedUser signedUser = new SignedUser();
-//            SignedUser.Load(); // Assuming Load() returns an instance of SignedUser
-//            SignedUser.Save(signedUser.toString());
+//        if (!isLoggedIn()) {
+//            userInfoLabel.setText("Please log in first.");
+//            return;
+//        }
 //
-//            Sender.sender.searchUserToBlock(signedUser.getPhone(), phoneNumber);
-////                Sender.sender.searchUserToBlock(phoneNumber);
+//        // Send block-search request to server
+//        Sender.sender.searchforblocking(SignedUser.phone, phoneNumber);
 //
-//            // receiving the response through async function
-//            CompletableFuture<Response> asyncResponse = CompletableFuture.supplyAsync(() -> {
-//                Response response = null;
+//        CompletableFuture<Response> asyncResponse = CompletableFuture.supplyAsync(() -> {
+//            Response response = null;
+//            try {
 //                try {
-//
-//                    String statusString = Sender.receive.readLine();
-//
-//                    response = new Response(statusString);
-//
-//                    if (response.statusCode == 200) {
-//
-//                        response.body = Sender.receive.readLine();
-//                    }
-//                } catch (IOException e) {
+//                    response = (Response) Sender.receive.readObject();
+//                } catch (ClassNotFoundException e) {
 //                    e.printStackTrace();
 //                }
-//                return response;
-//            });
 //
-//            asyncResponse.thenApply((res) -> {
 //
-//                System.out.println(res);
-//                if (res.statusCode != 200) {
-////                    Platform.runLater(() -> showError("Invalid phone number or password"));
-//                    blockUserButton.setDisable(true);
-//                } else {
-//                    Platform.runLater(() -> {
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//            return response;
+//        });
+//
+//        asyncResponse.thenApply((res) -> {
+//
+//            System.out.println(res);
+//            if (res.getStatusCode() != 200) {
+//                blockUserButton.setDisable(true);
+//            } else {
+//                Platform.runLater(() -> {
+//                    try {
+//                        SignedUser.save((User)res.getBody());
+//                        System.out.println("This is the body : "+ res.getBody());
 //                        blockUserButton.setDisable(false);
-//                    });
-//                }
+//                    } catch (Exception e) {
+//                        e.printStackTrace();
+//                    }
+//                });
+//            }
 //
-//                return res;
-//            });
-//        }
+//            return res;
+//        });
+//
 //    }
-
+//
 //    public void onBlockClicked() {
-//        String phoneNumber = phoneNumberField.getText();
-//        if(phoneNumber.length() == 11) {
+//        String phoneNumber = phoneNumberField.getText().trim();
+//        if (phoneNumber.length() == 11) {
 //            phoneNumber = "+88" + phoneNumber;
 //        }
-//        if (isLoggedIn()) {
-//                SignedUser signedUser = new SignedUser();
-//                SignedUser.Load(); // Assuming Load() returns an instance of SignedUser
-//                List<String> blockList = signedUser.getBlocklist();
 //
-//            Sender.sender.searchUserToBlock(signedUser.getPhone(), phoneNumber);
-////                Sender.sender.searchUserToBlock(phoneNumber);
-//
-//            // receiving the response through async function
-//            CompletableFuture<Response> asyncResponse = CompletableFuture.supplyAsync(() -> {
-//                Response response = null;
-//                try {
-//
-//                    String statusString = Sender.receive.readLine();
-//
-//                    response = new Response(statusString);
-//
-//                    if (response.statusCode == 200) {
-//
-//                        response.body = Sender.receive.readLine();
-//                    }
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-//                return response;
-//            });
-//
-//            String finalPhoneNumber = phoneNumber;
-//            asyncResponse.thenApply((res) -> {
-//
-//                System.out.println(res);
-//                if (res.statusCode != 200) {
-////                    Platform.runLater(() -> showError("Invalid phone number or password"));
-//                    blockUserButton.setDisable(true);
+//        // Send block request
+//        Sender.sender.block(phoneNumber);
+//        CompletableFuture.supplyAsync(() -> {
+//            try {
+//                Object obj = receive.readObject();
+//                return (Response) obj;
+//            } catch (IOException | ClassNotFoundException e) {
+//                e.printStackTrace();
+//                return null;
+//            }
+//        }).thenAccept(res -> {
+//            Platform.runLater(() -> {
+//                if (res == null || res.getStatusCode() != 200) {
+//                    userInfoLabel.setText("Failed to block user.");
 //                } else {
-//                    Platform.runLater(() -> {
-//                        blockUserButton.setDisable(false);
-//                        if (Page.isValidBDNumber(finalPhoneNumber)) {
-//                            blockList.add(finalPhoneNumber);
-//
-//                        }
-//                    });
+//                    try {
+//                        SignedUser.save((User) res.getBody());
+//                        userInfoLabel.setText("User blocked successfully.");
+//                        blockUserButton.setDisable(true);
+//                    } catch (Exception e) {
+//                        e.printStackTrace();
+//                    }
 //                }
-//
-//                return res;
 //            });
-//
-//                signedUser.setBlocklist(blockList);
-//                SignedUser.Save(signedUser.toString());
-//
-//        }
+//        });
 //    }
 //
-
-    public void ChatBackHandler(ActionEvent actionEvent) {
-            try {
-                new Page().Goto(Pages.CHAT);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-    }
-
-}
+//    public void ChatBackHandler(ActionEvent actionEvent) {
+//        try {
+//            new Page().Goto(Pages.CHAT);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//    }
+//}

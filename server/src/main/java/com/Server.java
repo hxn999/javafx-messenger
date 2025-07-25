@@ -20,7 +20,7 @@ public class Server{
         User.loadFromFile();
         Chat.loadAllChats();
         HashMap<String,Socket> clientMap = new HashMap<>();
-        System.out.println(User.getAllUsers().get(0));
+//        System.out.println(User.getAllUsers().get(0));
         ExecutorService executorService = Executors.newCachedThreadPool();
         int clientNum = 1;
         while(true){

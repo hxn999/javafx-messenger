@@ -40,21 +40,12 @@
           style="-fx-padding: 16;" stylesheets="@../styles/style.css">
         <!-- Profile Picture & Change Photo -->
         <VBox alignment="CENTER" spacing="12">
-            <StackPane>
-                <!-- Outer circle as border -->
-                <Circle fx:id="borderCircle" radius="52"
-                        style="-fx-fill: transparent;
-                   -fx-stroke: #0084FF;
-                   -fx-stroke-width: 4;" />
                 <!-- Your image, clipped to 50px radius -->
                 <ImageView fx:id="profileImageView"
                            fitWidth="100" fitHeight="100"
                            preserveRatio="true">
-                    <clip>
-                        <Circle fx:id="clipCircle"/>
-                    </clip>
                 </ImageView>
-            </StackPane>
+
 
             <Button fx:id="changePhotoButton" text="Change Photo"
                     style="-fx-background-color: transparent;

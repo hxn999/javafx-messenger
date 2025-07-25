@@ -9,7 +9,8 @@ public enum Path {
     BLOCK,
     SEARCH,
     SEARCHABLE,
-    UNBLOCK
-
-
+    UNBLOCK,
+    EDITACCOUNT,
+    LOGOUT,
+    TOBLOCK
 }

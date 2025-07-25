@@ -3,6 +3,7 @@ package com.api;
 import java.io.*;
 import java.net.Socket;
 
+import com.db.Chat;
 import com.db.Message;
 import com.db.SignedUser;
 import com.db.User;
@@ -77,15 +78,17 @@ public class Sender extends Thread {
         notifyAll();
     }
 
-    public synchronized void block(String phone) {
+    public synchronized void block(String userPhone,String phone) {
         Data body = new Data();
+        body.phone = userPhone;
         body.receiverPhone = phone;
         request = new Response(SignedUser.phone,body,Path.BLOCK);
         notifyAll();
     }
 
-    public synchronized void unblock(String phone) {
+    public synchronized void unblock(String userPhone,String phone) {
         Data body = new Data();
+        body.phone = userPhone;
         body.receiverPhone = phone;
         request = new Response(SignedUser.phone,body,Path.UNBLOCK);
         notifyAll();
@@ -110,6 +113,31 @@ public class Sender extends Thread {
         notify();
     }
 
+    public synchronized void EditACC(String oldPhone,String phone, String name, String password, String url) {
+        Data body = new Data();
+        body.oldPhone = oldPhone;
+        body.phone = phone;
+        body.name = name;
+        body.password = password;
+        body.url = url;
+        request = new Response(SignedUser.phone, body, Path.EDITACCOUNT);
+        notify();
+    }
+
+    public synchronized void logout(String phone) {
+        Data body = new Data();
+        body.phone = phone;
+        request = new Response(SignedUser.phone,body,Path.LOGOUT);
+        notify();
+    }
+
+    public synchronized void searchforblocking(String newPhone,String phone) {
+        Data body = new Data();
+        body.phone = newPhone;
+        body.receiverPhone = phone;
+        request = new Response(SignedUser.phone,body,Path.TOBLOCK);
+        notify();
+    }
 
 
     @Override

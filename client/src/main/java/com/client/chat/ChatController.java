@@ -13,6 +13,7 @@ import com.server.Response;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.event.ActionEvent;            // ← JavaFX ActionEvent
+import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
@@ -55,15 +56,17 @@ public class ChatController {
     private VBox contactsBox;
     @FXML
     private VBox chatList;
+
     private int chatId;
 
     @FXML
-
     private Button dotsButton;
 
     @FXML
+    private Button blockUserButton;
 
-    private Button blockUserButton;  // we'll still call this if you want to reuse its handler
+    @FXML
+    private MenuItem blockMenuItem;
 
     @FXML
     private ImageView userImage;
@@ -74,8 +77,6 @@ public class ChatController {
     // our ContextMenu and MenuItem
     @FXML
     private ContextMenu dotsMenu;
-    @FXML
-    private MenuItem blockUserItem;
     @FXML
     private String currentChatPhone;
 
@@ -139,14 +140,14 @@ public class ChatController {
 //        searchIcon.setPickOnBounds(false);
 
         // build the popup menu
-        dotsMenu = new ContextMenu();
-        blockUserItem = new MenuItem("Block User");
-        dotsMenu.getItems().add(blockUserItem);
-
-        // what happens when "Block User" is clicked
-        blockUserItem.setOnAction(e -> {
-            onBlockUserClicked();
-        });
+//        dotsMenu = new ContextMenu();
+//        blockUserItem = new MenuItem("Block User");
+//        dotsMenu.getItems().add(blockUserItem);
+//
+//        // what happens when "Block User" is clicked
+//        blockUserItem.setOnAction(e -> {
+//            onBlockUserClicked();
+//        });
 
         userName.setText(SignedUser.name);
 //        Base64ImageHelper.getImageViewFromBase64(userImage,SignedUser.url,50,50);
@@ -210,7 +211,7 @@ public class ChatController {
 
         }
 
-
+        blockMenuItem.setOnAction(e -> onBlockUserClicked());
 
     }
 
@@ -248,7 +249,7 @@ public class ChatController {
         }
     }
 
-    public void onSearchClicked(ActionEvent mouseEvent) {
+    public void onSearchClicked() {
         String query = searchField.getText().trim();
         List<User> foundUsers;
         if (!query.isEmpty()) {
@@ -471,21 +472,92 @@ public class ChatController {
 
     }
 
-    public void onDotsClicked() {
-        blockUserButton.setVisible(false);
+    @FXML
+    private void onDotsClicked(ActionEvent e) {
+        // Refresh the “Block/Unblock” text before showing
+        updateBlockButtonText(null);
+        // Show the menu anchored to the dots button
         dotsMenu.show(dotsButton, Side.BOTTOM, 0, 0);
     }
 
+
+
     public void onBlockUserClicked() {
-        System.out.println("Blocking user...");
-        // ... your block‐user code here ...
-        try {
-            new Page().Goto(Pages.BLOCK);
-        } catch (Exception e) {
-            e.printStackTrace();
+
+        System.out.println("Blocking/unblocking user…");
+
+        // Decide based on the *menu‑item* text:
+        if (blockMenuItem.getText().equals("Unblock User")) {
+            Sender.sender.unblock(SignedUser.phone, currentReceiverPhone);
+            handleBlockUnblockResponse(true);
+        } else {
+            Sender.sender.block(SignedUser.phone, currentReceiverPhone);
+            handleBlockUnblockResponse(false);
         }
-        // then hide the menu
+
+        // Hide the dots menu after selection
         dotsMenu.hide();
+    }
+
+    private void handleBlockUnblockResponse(boolean wasBlocked) {
+        CompletableFuture<Response> asyncResponse = CompletableFuture.supplyAsync(() -> {
+            try {
+                return (Response) Sender.receive.readObject();
+            } catch (IOException | ClassNotFoundException e) {
+                e.printStackTrace();
+                return null;
+            }
+        });
+
+        asyncResponse.thenAccept(res -> {
+            if (res == null) return;
+
+            // Toggle based on result
+            Platform.runLater(() -> {
+                if (res.getStatusCode() == 200) {
+                    // Persist and flip text
+                    try { SignedUser.save((User) res.getBody()); }
+                    catch (Exception ignored) { }
+                    blockMenuItem.setText(wasBlocked ? "Block User" : "Unblock User");
+                } else {
+                    // On error, leave text as it was
+                    blockMenuItem.setText(wasBlocked ? "Unblock User" : "Block User");
+                }
+            });
+        });
+    }
+
+    @FXML
+    private void updateBlockButtonText(Event ignored) {
+        // Send request to server
+        Sender.sender.searchforblocking(SignedUser.phone, currentReceiverPhone);
+
+        // Asynchronously wait for the response
+        CompletableFuture<Response> asyncResponse = CompletableFuture.supplyAsync(() -> {
+            Response response = null;
+            try {
+                response = (Response) Sender.receive.readObject();
+            } catch (IOException | ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+            return response;
+        });
+
+        asyncResponse.thenAccept((res) -> {
+            if (res == null) {
+                return;
+            }
+
+            // Determine blocked status
+            boolean isBlocked = res.getStatusCode() != 200;
+
+            System.out.println("The value of boolean : " + isBlocked);
+
+            // Update the button text on JavaFX thread
+            Platform.runLater(() -> {
+                blockUserButton.setText(isBlocked ? "Unblock User" : "Block User");
+            });
+        });
     }
 
     private void addMessageBubble(String text, boolean mine) {
@@ -511,5 +583,6 @@ public class ChatController {
         messageContainer.getChildren().add(messageContent);
         this.messageContainer.getChildren().add(messageContainer);
     }
+
 
 }

@@ -1,5 +1,6 @@
 package com.client.Settings;
 
+import com.api.Sender;
 import com.client.util.Page;
 import com.client.util.Pages;
 import com.db.SignedUser;
@@ -107,6 +108,7 @@ public class SettingsController implements Initializable {
     private void handleLogout(ActionEvent event) {
         try {
             SignedUser.logout();
+            Sender.sender.logout(SignedUser.phone);
             new Page().Goto(Pages.LOGIN);
         } catch (Exception e) {
             e.printStackTrace();

@@ -3,6 +3,7 @@ package com.api;
 import java.io.Serializable;
 
 public class Data implements Serializable {
+    public String oldPhone;
     public String phone;
     public String receiverPhone;
     public String password;

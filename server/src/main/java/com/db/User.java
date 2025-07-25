@@ -13,8 +13,29 @@ public class User implements Serializable {
     private List<String> blocklistPhones;
     private List<Integer> chatList;
 
+
     private static final String FILE_PATH = "server/src/main/db/users.dat";
     private static final List<User> allUsers = new ArrayList<>();
+
+    public void setName(String name) {
+        this.name = name;
+        saveAllToFile();
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+        saveAllToFile();
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+        saveAllToFile();
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+        saveAllToFile();
+    }
 
     // Constructors
     public User(String name, String url, String phone, String password) {

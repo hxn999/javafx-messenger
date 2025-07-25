@@ -127,6 +127,15 @@ public class ClientHandler {
                         case CHAT:
                             chatFetch();
                             break;
+                        case EDITACCOUNT:
+                            EditProfileInfo();
+                            break;
+                        case LOGOUT:
+                            logout();
+                            break;
+                        case TOBLOCK:
+                            searchToBlock();
+                            break;
                     }
                 } else {
                     System.out.println("The request is null");
@@ -159,11 +168,10 @@ public class ClientHandler {
                 // if name matched and its not the sender
                 if (matcher.matches() && !u.getPhone().equals(clientResponse.getSender())) {
 
-                    if(!u.isBlocked(body.phone))
-                    {
+
                         System.out.println(u.getName());
                         foundUsers.add(u);
-                    }
+
 
 
 
@@ -174,10 +182,44 @@ public class ClientHandler {
             response.writeObject(new Response("server",foundUsers,200));
 
         } catch (Exception e) {
-
+            e.printStackTrace();
         }
 
     }
+
+    public void searchToBlock() {
+        try {
+            Data body = (Data) clientResponse.getBody();
+            Optional<User> mUser = User.find(body.phone);
+            Optional<User> mtUser = User.find(body.receiverPhone);
+
+            if (mtUser.isEmpty()) {
+                response.writeObject(new Response(500));
+                return;
+            }
+
+            if (mUser.isPresent()) {
+                User user = mUser.get();
+                if (!user.isBlocked(body.receiverPhone)) {
+                    response.writeObject(new Response("Server", user, 200));
+                } else {
+                    response.writeObject(new Response(500));
+                }
+            } else {
+                response.writeObject(new Response(500));
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            try {
+                response.writeObject(new Response(500));
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
+            }
+        }
+    }
+
+
 
     private void messageSend() {
         try {
@@ -239,9 +281,7 @@ public class ClientHandler {
 
             Optional<User> mUser = User.find(body.phone);
 
-            if (!mUser.isPresent()) {
-
-
+            if (mUser.isEmpty()) {
                 response.writeObject(new Response(500));
                 return;
 
@@ -249,8 +289,8 @@ public class ClientHandler {
             User user = mUser.get();
 
             if (user.getPassword().equals(body.password)) {
-                response.writeObject(new Response("server",user,200));
                 clientMap.put(user.getPhone(), socket);
+                response.writeObject(new Response("server",user,200));
             } else {
                 response.writeObject(new Response(500));
             }
@@ -262,6 +302,66 @@ public class ClientHandler {
 
 
     }
+
+    private void logout() {
+        try {
+            Data body = (Data) clientResponse.getBody();
+            Optional<User> mUser = User.find(body.phone);
+            if (mUser.isPresent()) {
+                User user = mUser.get();
+                clientMap.remove(user.getPhone());
+                sendResponse(user.getName(), 200);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void EditProfileInfo() {
+        try {
+            Data body = (Data) clientResponse.getBody();
+            Optional<User> mUser = User.find(body.oldPhone);
+            if (!mUser.isPresent()) {
+                response.writeObject(new Response(500));
+                return;
+            }
+            User user = mUser.get();
+            if (body.phone != null) {
+                user.setPhone(body.phone);
+            }
+            if (body.name != null) {
+                user.setName(body.name);
+            }
+            if (body.password != null) {
+                user.setPassword(body.password);
+            }
+            if (body.url != null) {
+                user.setUrl(body.url);
+            }
+
+
+            User.saveAllToFile();  // <-- Add this line to commit changes
+
+            // --- Send the updated user back to the client ---
+           Socket receiverSocket = clientMap.get(body.oldPhone);
+            if (receiverSocket != null) {
+                clientMap.remove(body.oldPhone);
+                clientMap.put(user.getPhone(), receiverSocket);
+            } else {
+                System.out.println("Receiver socket not found for phone: " + body.oldPhone);
+            }
+            response.writeObject(new Response("server", user, 200));
+        } catch (IOException e) {
+            e.printStackTrace();
+            // You might also want to notify the client of the failure:
+            try {
+                response.writeObject(new Response(500));
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
+            }
+        }
+    }
+
 
     private void createUser() {
 
@@ -311,11 +411,18 @@ public class ClientHandler {
             if (mUser.isPresent()) {
                 User user = mUser.get();
                 user.block(body.receiverPhone);
+                response.writeObject(new Response("server", user, 200));
+            }else{
+                response.writeObject(new Response(500));
             }
 
 
         } catch (Exception e) {
-
+            try {
+                response.writeObject(new Response(500));
+            } catch (IOException ex) {
+                e.printStackTrace();
+            }
         }
     }
     private void unBlock() {
@@ -326,12 +433,20 @@ public class ClientHandler {
             Optional<User> mUser = User.find(body.phone);
             if (mUser.isPresent()) {
                 User user = mUser.get();
-                user.unblock(body.receiverPhone);
+                    user.unblock(body.receiverPhone);
+                    response.writeObject(new Response("server", user, 200));
+
+            }else{
+                response.writeObject(new Response(500));
             }
 
 
         } catch (Exception e) {
-
+            try {
+                response.writeObject(new Response(500));
+            } catch (IOException ex) {
+                e.printStackTrace();
+            }
         }
     }
 

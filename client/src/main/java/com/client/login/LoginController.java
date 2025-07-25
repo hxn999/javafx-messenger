@@ -88,11 +88,6 @@ public class LoginController implements Initializable {
 
     @FXML
     public void loginHandler() {
-
-
-
-
-
         String phoneText = phone.getText();
         String passwordText = password.getText();
         System.out.println("phone : " + phoneText);
@@ -125,6 +120,7 @@ public class LoginController implements Initializable {
                 Platform.runLater(() -> {
                     try {
                         SignedUser.save((User)res.getBody());
+                        System.out.println(res.getBody());
                         new Page().Goto(Pages.CHAT);
                     } catch (Exception e) {
                         e.printStackTrace();

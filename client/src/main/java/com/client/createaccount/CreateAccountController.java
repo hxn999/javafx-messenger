@@ -112,7 +112,7 @@ public class CreateAccountController implements Initializable {
             url = ImageBase64Util.encodeImageToBase64(imageUrl);
         }
 
-        Sender.sender.createAccount(name, phone, password,url);
+        Sender.sender.createAccount(name, phone, password, url);
 
         // receiving the response through async function
 
@@ -120,6 +120,7 @@ public class CreateAccountController implements Initializable {
             Response response = null;
             try {
                 try {
+                    System.out.println("Sending request to server");
                     response = (Response) Sender.receive.readObject();
                 } catch (ClassNotFoundException e) {
                     e.printStackTrace();

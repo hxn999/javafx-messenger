@@ -12,7 +12,10 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
+<?import javafx.scene.control.ContextMenu?>
+<?import javafx.scene.control.MenuItem?>
 
+<?import javafx.scene.control.ContextMenu?>
 <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="1000.0" stylesheets="@../styles/style.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.client.chat.ChatController">
    <children>
       <!-- Contacts pane -->
@@ -121,11 +124,20 @@
                      </image>
                   </ImageView>
                </graphic>
+               <contextMenu>
+                  <ContextMenu fx:id="dotsMenu" onShowing="#updateBlockButtonText">
+                     <items>
+                        <!-- Add fx:id here! -->
+                        <MenuItem fx:id="blockMenuItem"
+                                  text="Block User"
+                                  onAction="#onBlockUserClicked"/>
+                     </items>
+                  </ContextMenu>
+               </contextMenu>
                <HBox.margin>
                   <Insets left="400.0" />
                </HBox.margin>
             </Button>
-            <Button fx:id="blockUserButton" layoutX="0" layoutY="0" onAction="#onBlockUserClicked" prefHeight="0" prefWidth="0" styleClass="block-user-btn" text="Block User" visible="false" />
 
          </children>
       </HBox>
