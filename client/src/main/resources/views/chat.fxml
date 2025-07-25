@@ -117,23 +117,20 @@
                </children>
             </HBox>
             <Button fx:id="dotsButton" onAction="#onDotsClicked" prefHeight="40.0" prefWidth="40.0" styleClass="dots-btn">
-               <graphic>
-                  <ImageView fitHeight="30.0" fitWidth="30.0">
-                     <image>
-                        <Image url="@../icons/icons8-dots-30.png" />
-                     </image>
-                  </ImageView>
-               </graphic>
-               <contextMenu>
-                  <ContextMenu fx:id="dotsMenu" onShowing="#updateBlockButtonText">
-                     <items>
-                        <!-- Add fx:id here! -->
-                        <MenuItem fx:id="blockMenuItem"
-                                  text="Block User"
-                                  onAction="#onBlockUserClicked"/>
-                     </items>
-                  </ContextMenu>
-               </contextMenu>
+<!--               <graphic>-->
+<!--                  <ImageView fitHeight="30.0" fitWidth="30.0">-->
+<!--                     <image>-->
+<!--                        <Image url="@../icons/icons8-dots-30.png" />-->
+<!--                     </image>-->
+<!--                  </ImageView>-->
+<!--               </graphic>-->
+               <ContextMenu fx:id="dotsMenu" onShowing="#updateBlockMenuItemText">
+                  <items>
+                     <MenuItem fx:id="blockMenuItem" text="Block User" onAction="#onBlockUserClicked" />
+                  </items>
+               </ContextMenu>
+
+
                <HBox.margin>
                   <Insets left="400.0" />
                </HBox.margin>

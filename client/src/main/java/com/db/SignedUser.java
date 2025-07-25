@@ -86,6 +86,13 @@ public class SignedUser {
         return blocklistPhones != null && blocklistPhones.contains(phoneToCheck);
     }
 
+    public static void block(String phone){
+        blocklistPhones.add(phone);
+    }
+
+    public static void unblock(String phone){
+        blocklistPhones.remove(phone);
+    }
     public static void save(User user) {
         name = user.getName();
         url = user.getUrl();

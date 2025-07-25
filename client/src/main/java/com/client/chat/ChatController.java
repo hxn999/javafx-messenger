@@ -33,6 +33,7 @@ import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 
 import java.io.IOException;
 import java.time.LocalTime;
@@ -63,10 +64,8 @@ public class ChatController {
     private Button dotsButton;
 
     @FXML
-    private Button blockUserButton;
-
-    @FXML
     private MenuItem blockMenuItem;
+
 
     @FXML
     private ImageView userImage;
@@ -475,89 +474,81 @@ public class ChatController {
     @FXML
     private void onDotsClicked(ActionEvent e) {
         // Refresh the “Block/Unblock” text before showing
-        updateBlockButtonText(null);
+        updateBlockMenuItemText(e);
         // Show the menu anchored to the dots button
         dotsMenu.show(dotsButton, Side.BOTTOM, 0, 0);
     }
 
 
 
-    public void onBlockUserClicked() {
 
-        System.out.println("Blocking/unblocking user…");
+        public void onBlockUserClicked() {
+            boolean currentlyBlocked = blockMenuItem.getText().equals("Unblock User");
 
-        // Decide based on the *menu‑item* text:
-        if (blockMenuItem.getText().equals("Unblock User")) {
-            Sender.sender.unblock(SignedUser.phone, currentReceiverPhone);
-            handleBlockUnblockResponse(true);
-        } else {
-            Sender.sender.block(SignedUser.phone, currentReceiverPhone);
-            handleBlockUnblockResponse(false);
-        }
-
-        // Hide the dots menu after selection
-        dotsMenu.hide();
-    }
-
-    private void handleBlockUnblockResponse(boolean wasBlocked) {
-        CompletableFuture<Response> asyncResponse = CompletableFuture.supplyAsync(() -> {
-            try {
-                return (Response) Sender.receive.readObject();
-            } catch (IOException | ClassNotFoundException e) {
-                e.printStackTrace();
-                return null;
+            // 1) Tell server to flip
+            if (currentlyBlocked) {
+                Sender.sender.unblock(SignedUser.phone, currentReceiverPhone);
+            } else {
+                Sender.sender.block(SignedUser.phone, currentReceiverPhone);
             }
-        });
 
-        asyncResponse.thenAccept(res -> {
-            if (res == null) return;
-
-            // Toggle based on result
-            Platform.runLater(() -> {
-                if (res.getStatusCode() == 200) {
-                    // Persist and flip text
-                    try { SignedUser.save((User) res.getBody()); }
-                    catch (Exception ignored) { }
-                    blockMenuItem.setText(wasBlocked ? "Block User" : "Unblock User");
-                } else {
-                    // On error, leave text as it was
-                    blockMenuItem.setText(wasBlocked ? "Unblock User" : "Block User");
+            // 2) Wait for reply—and when you get it, update the text back on FX thread:
+            CompletableFuture.supplyAsync(() -> {
+                try { return (Response)Sender.receive.readObject(); }
+                catch (Exception ex) { ex.printStackTrace(); return null; }
+            }).thenAccept(res -> {
+                if (res != null && res.getStatusCode() == 200) {
+                    boolean nowBlocked = !currentlyBlocked;
+                    Platform.runLater(() ->
+                            blockMenuItem.setText(nowBlocked
+                                    ? "Unblock User"
+                                    : "Block User"));
+                    // also update your local model so next time it's correct:
+                    if (nowBlocked) SignedUser.block(currentReceiverPhone);
+                    else            SignedUser.unblock(currentReceiverPhone);
                 }
             });
-        });
-    }
 
-    @FXML
-    private void updateBlockButtonText(Event ignored) {
-        // Send request to server
-        Sender.sender.searchforblocking(SignedUser.phone, currentReceiverPhone);
+            // 3) Hide the menu
+            dotsMenu.hide();
+        }
 
-        // Asynchronously wait for the response
-        CompletableFuture<Response> asyncResponse = CompletableFuture.supplyAsync(() -> {
-            Response response = null;
-            try {
-                response = (Response) Sender.receive.readObject();
-            } catch (IOException | ClassNotFoundException e) {
-                e.printStackTrace();
-            }
-            return response;
-        });
+//    private void handleBlockUnblockResponse(boolean wasBlocked) {
+//        CompletableFuture<Response> asyncResponse = CompletableFuture.supplyAsync(() -> {
+//            try {
+//                return (Response) Sender.receive.readObject();
+//            } catch (IOException | ClassNotFoundException e) {
+//                e.printStackTrace();
+//                return null;
+//            }
+//        });
+//
+//        asyncResponse.thenAccept(res -> {
+//            if (res == null) return;
+//
+//            // Toggle based on result
+//            Platform.runLater(() -> {
+//                if (res.getStatusCode() == 200) {
+//                    // Persist and flip text
+//                    try { SignedUser.save((User) res.getBody()); }
+//                    catch (Exception ignored) { }
+//                    blockMenuItem.setText(wasBlocked ? "Block User" : "Unblock User");
+//                } else {
+//                    // On error, leave text as it was
+//                    blockMenuItem.setText(wasBlocked ? "Unblock User" : "Block User");
+//                }
+//            });
+//        });
+//    }
 
-        asyncResponse.thenAccept((res) -> {
-            if (res == null) {
-                return;
-            }
 
-            // Determine blocked status
-            boolean isBlocked = res.getStatusCode() != 200;
+    public void updateBlockMenuItemText(Event event) {
+        boolean isBlockedLocally = SignedUser.isBlocked(currentReceiverPhone);
 
-            System.out.println("The value of boolean : " + isBlocked);
-
-            // Update the button text on JavaFX thread
-            Platform.runLater(() -> {
-                blockUserButton.setText(isBlocked ? "Unblock User" : "Block User");
-            });
-        });
+        // 2) Update UI immediately based on local info
+        blockMenuItem.setText(isBlockedLocally
+                ? "Unblock User"
+                : "Block User");
     }
 
     private void addMessageBubble(String text, boolean mine) {
@@ -583,6 +574,4 @@ public class ChatController {
         messageContainer.getChildren().add(messageContent);
         this.messageContainer.getChildren().add(messageContainer);
     }
-
-
 }
