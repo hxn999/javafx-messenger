@@ -9,24 +9,42 @@ public class Response implements Serializable {
     private Object body;
     private int statusCode;
     private Path path;
-    public Response(String sender, Object body, int statusCode) {
+    private String requestId;
+
+    public Response(String sender, Object body, int statusCode, String requestId) {
         this.sender = sender;
         this.body = body;
         this.statusCode = statusCode;
+        this.requestId = requestId;
     }
-    public Response(String sender, Object body, Path path) {
+    public Response(String sender, Object body, Path path, String requestId) {
         this.sender = sender;
         this.body = body;
         this.path = path;
+        this.requestId = requestId;
     }
     public Response(int statusCode) {
         this.statusCode = statusCode;
         this.sender ="server";
     }
+    public Response(int statusCode, String requestId) {
+        this.statusCode = statusCode;
+        this.sender ="server";
+        this.requestId = requestId;
+    }
     public Response(String msg,int statusCode) {
         this.body = msg;
         this.sender ="server";
     }
+
+    public String getRequestId() {
+        return this.requestId;
+    }
+
+    public void setRequestId(String requestId) {
+        this.requestId = requestId;
+    }
+
     public Path getPath() {
         return path;
     }

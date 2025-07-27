@@ -3,10 +3,9 @@ package com.client.chat;
 //import com.fasterxml.jackson.core.json.DupDetector;
 
 
+import com.api.ResponseManager;
 import com.api.Sender;
-import com.client.util.Base64ImageHelper;
-import com.client.util.Page;
-import com.client.util.Pages;
+import com.client.util.*;
 //import com.db.ClientChat;
 import com.db.*;
 import com.server.Response;
@@ -36,10 +35,7 @@ import javafx.stage.Stage;
 import java.io.IOException;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 public class ChatController {
@@ -100,22 +96,40 @@ public class ChatController {
     private ImageView receiverImage;
 
     // maps receiver phone to chat id
-    private Map<String,Integer> receiverMap;
+    public static Map<String,Integer> receiverMap;
     //
     boolean hadChat = false;
-    Integer currentChatId=null;
+    public static Integer currentChatId=null;
     private String currentReceiverPhone;
-
+    public static List<User> allChatUser;
 //    private List<ClientChat> chats;
 
 
-    private Map<Integer, Chat> allChats = new HashMap<>();
+    public static Map<Integer, Chat> allChats = new HashMap<>();
+
+
+    public static void addOrUpdateUser(User user) {
+        for (int i = 0; i < allChatUser.size(); i++) {
+            if (allChatUser.get(i).getPhone().equals(user.getPhone())) {
+                allChatUser.set(i, user); // update
+                return;
+            }
+        }
+        allChatUser.add(user); // add if not found
+    }
+
+    public static Optional<User> findUser(String phone) {
+        return allChatUser.stream()
+                .filter(u -> u.getPhone().equals(phone))
+                .findFirst();
+    }
 
     /**
      * This must be annotated @FXML so FXMLLoader sees it.
      */
     @FXML
     private void initialize() {
+        allChatUser= new ArrayList<>();
         // optional setup after FXML is loaded
         settingsButton.setOnAction(this::onSettingsClicked);
 
@@ -157,58 +171,56 @@ public class ChatController {
 //        loadAllChat();
         receiverMap = new HashMap<>();
         // loading all chats
+        List<CompletableFuture<Response>> futures = new ArrayList<>();
+
         for (int chatId : SignedUser.chatList) {
-            Sender.sender.fetchChat(chatId);
+            String requestId = UUID.randomUUID().toString();
+            CompletableFuture<Response> future = new CompletableFuture<>();
+            ResponseManager.register(requestId, future);
+//            Sender.sender.fetchChat(chatId, requestId);
 
-            CompletableFuture<Response> asyncResponse = CompletableFuture.supplyAsync(() -> {
-                Response response = null;
-                try {
-                    try {
-                        response = (Response) Sender.receive.readObject();
-                    } catch (ClassNotFoundException e) {
-                        e.printStackTrace();
-                    }
+            CompletableFuture<Response> chainedFuture = future.thenCompose(res -> {
+                if (res.getStatusCode() == 200) {
+                    Chat chat = (Chat) res.getBody();
+                    allChats.put(chatId, chat);
+                  chat.printMessages();
+                    String receiverPhone = ReceiverPhone.get(chat);
+                    receiverMap.put(receiverPhone, chatId);
 
+                    // Now fetch the receiver user
+                    String userReqId = UUID.randomUUID().toString();
+                    CompletableFuture<Response> userFuture = new CompletableFuture<>();
+                    ResponseManager.register(userReqId, userFuture);
+                    System.out.println("receiverPhone = " + receiverPhone);
+                    Sender.sender.searchSingle(receiverPhone, userReqId);
 
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                return response;
-            });
-
-            asyncResponse.thenApply((res) -> {
-
-                System.out.println(res);
-                if (res.getStatusCode() != 200) {
-//                Platform.runLater(() -> showError("Invalid phone number or password"));
-                } else {
-                    Platform.runLater(() -> {
-                        try {
-                            Chat chat = (Chat) res.getBody();
-                            allChats.put(chatId, chat);
-                            String receiverPhone ;
-                            if(!chat.getUser1().equals(SignedUser.phone))
-                            {
-                                receiverPhone = chat.getUser1();
-                            }else {
-                                receiverPhone = chat.getUser2();
-                            }
-
-                            receiverMap.put(receiverPhone, chatId);
-
-
-                        } catch (Exception e) {
-                            e.printStackTrace();
+                    return userFuture.thenApply(userRes -> {
+                        System.out.println("fetching user for phone: " + receiverPhone);
+                        if (userRes.getStatusCode() == 200) {
+                            User receiver = (User) userRes.getBody();
+                        System.out.println(userRes.getStatusCode());
+                            System.out.println("Fetched user: " + receiver.getName());
+                            addOrUpdateUser(receiver); // Add to ChatController.allChatUser
+                        } else {
+                            System.err.println("❌ Failed to fetch user for phone: " + receiverPhone);
                         }
+                        return userRes;
                     });
+                } else {
+                    System.err.println("❌ Failed to fetch chat for chatId: " + chatId);
+                    return CompletableFuture.completedFuture(res);
                 }
-
-                return res;
             });
 
-
-
+            futures.add(chainedFuture);
         }
+
+// 🔁 Run after ALL chats + users are fetched
+        CompletableFuture
+                .allOf(futures.toArray(new CompletableFuture[0]))
+                .thenRun(() -> Platform.runLater(this::populateChatList));
+
+
 
 
 
@@ -253,23 +265,14 @@ public class ChatController {
         List<User> foundUsers;
         if (!query.isEmpty()) {
 
-            Sender.sender.searchUser(query);
+            // Create a request ID
+            String requestId = UUID.randomUUID().toString();
 
-            CompletableFuture<Response> asyncResponse = CompletableFuture.supplyAsync(() -> {
-                Response response = null;
-                try {
-                    try {
-                        response = (Response) Sender.receive.readObject();
-                    } catch (ClassNotFoundException e) {
-                        e.printStackTrace();
-                    }
+            // Create future & register it
+            CompletableFuture<Response> asyncResponse = new CompletableFuture<>();
+            ResponseManager.register(requestId, asyncResponse);
 
-
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                return response;
-            });
+            Sender.sender.searchUser(query, requestId);
 
             asyncResponse.thenApply((res) -> {
 
@@ -294,7 +297,7 @@ public class ChatController {
 
     public void onClearSearchClicked(MouseEvent mouseEvent) {
         searchField.clear();
-        chatList.getChildren().clear();
+        populateChatList();
     }
 
     public void showSearchResults(List<User> users) {
@@ -346,121 +349,92 @@ public class ChatController {
     }
 
     public void startChat(MouseEvent mouseEvent, User user) {
-//        System.out.println("startChat with"+phone);
-//
-//        Sender.sender.sendMessage(phone,"initializing chat","null");
-            receiverImage.setImage(Base64ImageHelper.getImageViewFromBase64(user.getUrl()));
-            receiverName.setText(user.getName());
-            currentReceiverPhone = user.getPhone();
-            // check if already has conversation to this user
-            Integer chatId = receiverMap.get(user.getPhone());
+        receiverImage.setImage(Base64ImageHelper.getImageViewFromBase64(user.getUrl()));
+        receiverName.setText(user.getName());
+        currentReceiverPhone = user.getPhone();
+        Integer chatId = receiverMap.get(user.getPhone());
 
-            if(chatId != null) {
-                hadChat = true;
-                currentChatId=chatId;
-                populateChat(allChats.get(chatId));
-            }else{
-                hadChat = false;
-            }
+        // Clear message container when switching chats
+        messageContainer.getChildren().clear();
 
+        if(chatId != null) {
+            hadChat = true;
+            currentChatId=chatId;
+            populateChat(allChats.get(chatId));
+        }else{
+            hadChat = false;
+        }
 
-
-
-
-
-
-
-
+        populateChatList();
     }
-
 
     public void populateChat(Chat chat)
     {
+        messageContainer.getChildren().clear();
+        Set<String> shownMessages = new HashSet<>();
         for (Message msg:chat.getMessages())
         {
-            // checking its my message or not
+            // Prevent duplicate messages
+            String msgKey = msg.getSender() + msg.getTimestamp() + msg.getMessage();
+            if (shownMessages.contains(msgKey)) continue;
+            shownMessages.add(msgKey);
+
             boolean mine= msg.getSender().equals(SignedUser.phone);
             addMessageBubble(msg.getMessage(),mine);
         }
     }
 
-//    public void loadAllChat()
-//    {
-//        // requesting server to send all previous chats
-//       chats = new ArrayList<>();
-//       for (int chatId:SignedUser.chatList)
-//        {
-//            chats.add(new ClientChat(chatId));
-//        }
-//
-//        Sender.sender.requestChatUpdate();
-//
-//
-//        // receiving the response through async function
-//        CompletableFuture<Response> asyncResponse = CompletableFuture.supplyAsync(() -> {
-//            Response response = null;
-//            try {
-//
-//                String statusString = Sender.receive.readLine();
-//                response = new Response(statusString);
-//                StringBuilder receivedData = new StringBuilder();
-//                String data;
-//                if (response.statusCode == 200) {
-//                    while (( data = Sender.receive.readLine())!=null) {
-//                        receivedData.append(data);
-//
-//                    }
-//                    response.body = receivedData.toString();
-//                }
-//
-//
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//            return response;
-//        });
-//
-//        asyncResponse.thenApply((res) -> {
-//            System.out.println(res.body);
 
-    /// /            if (res.statusCode != 200) {
-    /// /                Platform.runLater(() -> showError("Invalid phone number or password"));
-    /// /            } else {
-    /// /                Platform.runLater(() -> {
-    /// /                    try {
-    /// /                        SignedUser.Save(res.body);
-    /// /                        new Page().Goto(Pages.CHAT);
-    /// /                    } catch (Exception e) {
-    /// /                        e.printStackTrace();
-    /// /                    }
-    /// /                });
-    /// /            }
-//
-//            return res;
-//        });
-//
-//    }
-
-
-//    public void onSearchClicked(MouseEvent mouseEvent) {
-//    }
     @FXML
     public void onSendClicked(ActionEvent event) {
 
 //        if (currentChatPhone == null) return;
 
         String text = messageField.getText().trim();
-        System.out.println("I am here " + text + " " + currentChatPhone);
+
         if (text.isEmpty()) return;
         Message msg = new Message(SignedUser.phone,currentReceiverPhone, System.currentTimeMillis() / 1000L,text);
         if(!hadChat) {
+            System.out.println("first message");
             msg.setFirstMsg(true);
+
         }
         else{
+            System.out.println("not first message");
             msg.setChatId(currentChatId);
         }
+        // Create a request ID
+        String requestId = UUID.randomUUID().toString();
+
+        // Create future & register it
+        CompletableFuture<Response> asyncResponse = new CompletableFuture<>();
+        ResponseManager.register(requestId, asyncResponse);
+
         // 1) send to server
-        Sender.sender.sendMessage( msg);
+        Sender.sender.sendMessage( msg ,requestId);
+
+        asyncResponse.thenApply((res) -> {
+            System.out.println("hiiiiiiiiiiiiii");
+            Chat chat =(Chat) res.getBody();
+
+            if (res.getStatusCode() != 200) {
+//                Platform.runLater(() -> showError("Invalid phone number or password"));
+            } else {
+                Platform.runLater(() -> {
+
+                    allChats.put(chat.getChatId(),chat);
+                    populateChatList();
+                    System.out.println(chat.getChatId());
+                    SignedUser.chatList.add(chat.getChatId());
+                    SignedUser.saveToFile();
+                });
+
+
+            }
+
+            return res;
+        });
+
 
         // 2) echo locally
         addMessageBubble(text, true);
@@ -488,7 +462,8 @@ public class ChatController {
         dotsMenu.hide();
     }
 
-    private void addMessageBubble(String text, boolean mine) {
+    public void addMessageBubble(String text, boolean mine) {
+
         HBox messageContainer = new HBox();
         messageContainer.setAlignment(mine ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
         messageContainer.setPadding(new Insets(5, 10, 5, 10));
@@ -511,5 +486,61 @@ public class ChatController {
         messageContainer.getChildren().add(messageContent);
         this.messageContainer.getChildren().add(messageContainer);
     }
+
+
+    public void populateChatList() {
+        chatList.getChildren().clear();
+
+        for (int chatId : SignedUser.chatList) {
+            String phone = MapUtils.getKeyFromValue(receiverMap, chatId);
+
+            if (phone == null) {
+                System.err.println("No phone found for chatId: " + chatId);
+                continue;
+            }
+
+            User user = FindUser.findUserByPhone(allChatUser, phone);
+            if (user == null) {
+                // Skip if user not found
+                continue;
+            }
+
+            HBox hbox = new HBox();
+            hbox.setAlignment(Pos.CENTER);
+            hbox.setPrefWidth(334);
+            hbox.setPrefHeight(72);
+
+            ImageView avatar = new ImageView(Base64ImageHelper.getImageViewFromBase64(user.getUrl()));
+            avatar.setFitWidth(55);
+            avatar.setFitHeight(50);
+
+            VBox vbox = new VBox();
+            vbox.setPrefWidth(231);
+            vbox.setPrefHeight(100);
+
+            Label nameLabel = new Label(user.getName());
+            nameLabel.setPrefWidth(131);
+            nameLabel.setPrefHeight(35);
+            nameLabel.setFont(Font.font("System", FontWeight.BOLD, 16));
+            VBox.setMargin(nameLabel, new Insets(8, 0, 0, 0));
+            nameLabel.setAlignment(Pos.CENTER);
+
+            Label messageLabel = new Label("Click to message");
+            messageLabel.setPrefWidth(227);
+            messageLabel.setPrefHeight(18);
+            VBox.setMargin(messageLabel, new Insets(0, 0, 0, 0));
+            messageLabel.setPadding(new Insets(0, 0, 0, 15));
+            messageLabel.setAlignment(Pos.TOP_LEFT);
+
+            vbox.getChildren().addAll(nameLabel, messageLabel);
+            hbox.getChildren().addAll(avatar, vbox);
+
+            hbox.setId(user.getPhone());
+            hbox.setOnMouseClicked(event -> startChat(event, user));
+
+            chatList.getChildren().add(hbox);
+        }
+    }
+
 
 }

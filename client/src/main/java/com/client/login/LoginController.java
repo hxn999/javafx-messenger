@@ -1,5 +1,6 @@
 package com.client.login;
 
+import com.api.ResponseManager;
 import com.server.Response;
 import com.client.util.Page;
 import com.client.util.Pages;
@@ -43,6 +44,7 @@ import javafx.scene.text.Font;
 import javafx.stage.FileChooser;
 
 import java.io.File;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 import com.api.Sender;
@@ -97,24 +99,17 @@ public class LoginController implements Initializable {
         String passwordText = password.getText();
         System.out.println("phone : " + phoneText);
         System.out.println("password : " + passwordText);
-        Sender.sender.login(phoneText, passwordText);
-
-        // receiving the response through async function
-        CompletableFuture<Response> asyncResponse = CompletableFuture.supplyAsync(() -> {
-            Response response = null;
-            try {
-                try {
-                    response = (Response) Sender.receive.readObject();
-                } catch (ClassNotFoundException e) {
-                    e.printStackTrace();
-                }
 
 
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            return response;
-        });
+        // Create a request ID
+        String requestId = UUID.randomUUID().toString();
+        System.out.println(requestId);
+        // Create future & register it
+        CompletableFuture<Response> asyncResponse = new CompletableFuture<>();
+        ResponseManager.register(requestId, asyncResponse);
+
+        // Send login request with ID
+        Sender.sender.login(phoneText, passwordText, requestId);  // pass requestId with request
 
         asyncResponse.thenApply((res) -> {
 

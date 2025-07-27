@@ -74,7 +74,7 @@ public class ClientHandler {
     // Helper method to send responses
     private void sendResponse(String body, int statusCode) {
         try {
-            Response serverResponse = new Response("server", body, statusCode);
+            Response serverResponse = new Response("server", body, statusCode, clientResponse.getRequestId());
             response.writeObject(serverResponse);
             response.flush();
         } catch (IOException e) {
@@ -101,7 +101,7 @@ public class ClientHandler {
             while (true) {
                 // Read Response object from client
                 clientResponse = (Response) request.readObject();
-                System.out.println("Received request: " + clientResponse);
+                System.out.println("Received request: " + clientResponse.getRequestId());
 
                 if (clientResponse != null) {
 
@@ -127,6 +127,10 @@ public class ClientHandler {
                         case CHAT:
                             chatFetch();
                             break;
+
+                        case SINGLE_SEARCH:
+                            singleSearchUser();
+                            break;
                     }
                 } else {
                     System.out.println("The request is null");
@@ -141,9 +145,32 @@ public class ClientHandler {
         }
     }
 
+    private void singleSearchUser() {
+
+        try {
+
+            Data body = (Data) clientResponse.getBody();
+
+            Optional<User> mUser = User.find(body.receiverPhone);
+            System.out.println("Searching user: " + body.receiverPhone);
+            if (!mUser.isPresent()) {
+                System.out.println("User not found: ");
+                response.writeObject(new Response(500, clientResponse.getRequestId()));
+                return;
+            }
+            User user = mUser.get();
+
+            System.out.println(user);
+
+            response.writeObject(new Response("server",user,200,clientResponse.getRequestId()));
+
+        } catch (Exception e) {
+
+        }
+
+    }
+
     private void searchUser() {
-
-
 
 
         try {
@@ -171,7 +198,7 @@ public class ClientHandler {
                 }
             }
 
-            response.writeObject(new Response("server",foundUsers,200));
+            response.writeObject(new Response("server",foundUsers,200,clientResponse.getRequestId()));
 
         } catch (Exception e) {
 
@@ -181,105 +208,119 @@ public class ClientHandler {
 
     private void messageSend() {
         try {
+            System.out.println("Message send request received: " + clientResponse.getRequestId());
             Message msg = (Message) clientResponse.getBody();
 
             // checking if user is blocked or not
-
             Optional<User> mUser = User.find(msg.getReceiver());
             if (mUser.isPresent()) {
                 User user = mUser.get();
                 if (user.isBlocked(msg.getSender())) {
                     // receiver blocked user , nothing to send or save
-                    response.writeObject(new Response(500));
+                    response.writeObject(new Response(500, clientResponse.getRequestId()));
                     return;
                 }
             }
             // if its the starting of the chat
-            Chat chat=null;
-            if(msg.isFirstMsg())
-            {
-               chat= Chat.createChat(msg.getReceiver(),msg.getSender());
+            Chat chat = null;
+            if (msg.isFirstMsg()) {
+                System.out.println("first message");
+                chat = Chat.createChat(msg.getSender(), msg.getReceiver());
+                User.find(msg.getReceiver()).get().getChatList().add(chat.getChatId());
+                User.find(msg.getSender()).get().getChatList().add(chat.getChatId());
+                User.saveAllToFile();
+
+                response.writeObject(new Response("server", chat, 200, clientResponse.getRequestId()));
                 msg.setChatId(chat.getChatId());
             }
 
-
             Socket receiverSocket = clientMap.get(msg.getReceiver());
-            ObjectOutputStream receiverStream = new ObjectOutputStream(receiverSocket.getOutputStream());
+            ObjectOutputStream receiverStream = null;
+            if (receiverSocket != null) {
+                receiverStream = getCachedOutputStream(receiverSocket);
+            }
 
-            if(!msg.isFirstMsg())
-            {
-
+            if (!msg.isFirstMsg()) {
+                System.out.println("not first message");
                 chat = Chat.findChat(msg.getChatId());
             }
 
             chat.addMessage(msg);
-
+            response.writeObject(new Response("server", chat, 200, clientResponse.getRequestId()));
 
             // receiver is online
-            if (receiverSocket != null) {
-                if (msg.isFirstMsg()) {
-                    // sending full chat file if its the start of conversation
-                    receiverStream.writeObject(chat);
-                } else {
-                    receiverStream.writeObject(msg);
+            if (receiverSocket != null && receiverStream != null) {
+                try {
+                    if (msg.isFirstMsg()) {
+                        receiverStream.writeObject(chat);
+                    } else {
+                        receiverStream.writeObject(msg);
+                    }
+                    receiverStream.flush();
+                    System.out.println("Real-time message sent to receiver: " + msg.getReceiver());
+                } catch (IOException e) {
+                    System.err.println("Failed to send real-time message to receiver: " + msg.getReceiver());
+                    e.printStackTrace();
                 }
+            } else {
+                System.out.println("Receiver not online: " + msg.getReceiver());
             }
 
-
         } catch (Exception e) {
-
+            System.err.println("Error in messageSend: " + e.getMessage());
+            e.printStackTrace();
         }
+    }
 
-
+    // Cache ObjectOutputStream per socket to avoid stream corruption
+    private static final Map<Socket, ObjectOutputStream> outputStreamCache = new HashMap<>();
+    private ObjectOutputStream getCachedOutputStream(Socket socket) throws IOException {
+        if (!outputStreamCache.containsKey(socket)) {
+            outputStreamCache.put(socket, new ObjectOutputStream(socket.getOutputStream()));
+        }
+        return outputStreamCache.get(socket);
     }
 
     private void login() {
         try {
             Data body = (Data) clientResponse.getBody();
-
+            System.out.println(clientResponse.getRequestId());
+            System.out.println("hiii");
             Optional<User> mUser = User.find(body.phone);
 
             if (!mUser.isPresent()) {
-
-
-                response.writeObject(new Response(500));
+                response.writeObject(new Response(500, clientResponse.getRequestId()));
                 return;
-
             }
             User user = mUser.get();
 
             if (user.getPassword().equals(body.password)) {
-                response.writeObject(new Response("server",user,200));
+                response.writeObject(new Response("server", user, 200, clientResponse.getRequestId()));
+                // Register user's socket for real-time messaging
                 clientMap.put(user.getPhone(), socket);
             } else {
-                response.writeObject(new Response(500));
+                response.writeObject(new Response(500, clientResponse.getRequestId()));
             }
-
-
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-
     }
 
     private void createUser() {
-
         try {
             User newUser = (User) clientResponse.getBody();
             Optional<User> mUser = User.find(newUser.getPhone());
             if (mUser.isPresent()) {
-                response.writeObject(new Response(500));
+                response.writeObject(new Response(500, clientResponse.getRequestId()));
                 return;
             }
             User.addUser(newUser);
-            response.writeObject(new Response("server",newUser,200));
+            response.writeObject(new Response("server", newUser, 200, clientResponse.getRequestId()));
+            // Register new user's socket for real-time messaging
             clientMap.put(newUser.getPhone(), socket);
-
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
     private void chatFetch() {
@@ -289,12 +330,12 @@ public class ClientHandler {
 
             Chat chat = Chat.findChat(body.chatId);
 
-            response.writeObject(new Response("server", chat, 200));
+            response.writeObject(new Response("server", chat, 200, clientResponse.getRequestId()));
 
 
         } catch (Exception e) {
             try {
-                response.writeObject(new Response(500));
+                response.writeObject(new Response(500, clientResponse.getRequestId()));
             } catch (IOException ex) {
                 e.printStackTrace();
             }
@@ -337,4 +378,3 @@ public class ClientHandler {
 
 
 }
-

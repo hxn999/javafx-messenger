@@ -32,8 +32,10 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
+import com.api.ResponseManager;
 import com.db.SignedUser;
 
 public class CreateAccountController implements Initializable {
@@ -112,25 +114,14 @@ public class CreateAccountController implements Initializable {
             url = ImageBase64Util.encodeImageToBase64(imageUrl);
         }
 
-        Sender.sender.createAccount(name, phone, password,url);
+        // Create a request ID
+        String requestId = UUID.randomUUID().toString();
 
-        // receiving the response through async function
+        // Create future & register it
+        CompletableFuture<Response> asyncResponse = new CompletableFuture<>();
+        ResponseManager.register(requestId, asyncResponse);
 
-        CompletableFuture<com.server.Response> asyncResponse = CompletableFuture.supplyAsync(() -> {
-            Response response = null;
-            try {
-                try {
-                    response = (Response) Sender.receive.readObject();
-                } catch (ClassNotFoundException e) {
-                    e.printStackTrace();
-                }
-
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            return response;
-        });
+        Sender.sender.createAccount(name, phone, password, url, requestId);
 
         asyncResponse.thenApply((res) -> {
 
@@ -156,4 +147,3 @@ public class CreateAccountController implements Initializable {
 
 
 }
-

@@ -46,6 +46,7 @@ public class User implements Serializable {
 
     // Find user by phone
     public static Optional<User> find(String phone) {
+        System.out.println("hi finding user with phone: " + phone);
         return allUsers.stream().filter(u -> u.phone.equals(phone)).findFirst();
     }
 

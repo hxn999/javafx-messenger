@@ -1,7 +1,8 @@
 package com.Application;
 
-import com.api.MessageReceiver;
+import com.api.Receiver;
 import com.api.Sender;
+import com.client.chat.ChatController;
 import com.client.util.Page;
 import com.client.util.Pages;
 import com.db.SignedUser;
@@ -19,7 +20,7 @@ public class App extends Application {
 
     // making the stage global for accessing
     public static Stage globalStage;
-
+    public static ChatController chatController;
     @Override
     public void start(Stage stage) throws IOException {
         globalStage = stage;
@@ -32,35 +33,42 @@ public class App extends Application {
         stage.setScene(scene);
         stage.show();
 
+        // If user is logged in, go to chat page and set chatController
         if (SignedUser.isLoggedIn()) {
             try {
-                new Page().Goto(Pages.CHAT);
+                FXMLLoader chatLoader = new FXMLLoader(getClass().getResource("/views/chat.fxml"));
+                Parent chatRoot = chatLoader.load();
+                chatController = chatLoader.getController();
+                Scene chatScene = new Scene(chatRoot, 1000, 600);
+                globalStage.setScene(chatScene);
+                globalStage.show();
+                // Networking should be initialized after chatController is set
+                initNetworking(chatController);
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        } else {
+            // Networking should be initialized after UI is ready (login page)
+            initNetworking(null);
+        }
+    }
+
+    private void initNetworking(ChatController chatController) {
+        try {
+            Socket socket = new Socket("127.0.0.1", 5000);
+            Sender sender = new Sender("Sender-Thread", socket);
+            Receiver msgReceiver = new Receiver("Receiver-Thread", socket, chatController);
+            Sender.sender = sender;
+            sender.start();
+            msgReceiver.start();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
     public static void main(String[] args) {
-        Sender sender = null;
-        Socket socket = null;
-        MessageReceiver msgReceiver = null;
-
-        try {
-            socket = new Socket("127.0.0.1", 5000);
-            sender = new Sender("Sender-Thread", socket);
-            msgReceiver = new MessageReceiver("Receiver-Thread", socket);
-            sender.start();
-//            msgReceiver.start();
-        } catch (IOException e) {
-            e.printStackTrace();
-
-        }
-
-
-
-        System.out.println(System.currentTimeMillis());
-        System.out.println(System.getProperty("javafx.runtime.version"));
+        SignedUser.loadFromFile();
+        System.out.println(SignedUser.chatList.size());
         launch(args);
     }
 }

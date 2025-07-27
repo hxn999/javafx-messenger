@@ -1,72 +1,103 @@
 package com.api;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.net.Socket;
+//import com.db.ClientChat;
+
+import com.client.chat.ChatController;
+import com.client.util.ReceiverPhone;
+import com.db.Chat;
+import com.db.Message;
+import com.db.SignedUser;
 import com.server.Response;
+import javafx.application.Platform;
+
+import java.io.*;
+import java.net.Socket;
 
 public class Receiver extends Thread {
 
-    private Socket socket;
-    private String type;
-    private ObjectInputStream receive;
-    private Response data;
-    public static Receiver receiver;
 
-    public Receiver(String name, Socket socket) {
+    public static ObjectInputStream receive;
+    private Socket socket;
+    private ChatController chatController;
+
+    public Receiver(String name, Socket socket, ChatController chatController) {
         super(name);
         this.socket = socket;
-        try {
-            this.receive = new ObjectInputStream(socket.getInputStream());
+        this.chatController = chatController;
 
+        try {
+            receive = new ObjectInputStream(this.socket.getInputStream());
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        this.receiver = this;
     }
 
-    private void receive() {
-        synchronized (this) {
-            while (true) {
-                System.out.println("waiting for data to send");
-                System.out.println(Thread.currentThread().getState());
-                try {
-                    // Read Response object from server
-                    data = (Response) receive.readObject();
 
-                    if (data != null) {
-                        System.out.println("Received response: " + data);
-                    }
-                    System.out.println("not waiting for data to send");
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (ClassNotFoundException e) {
-                    e.printStackTrace();
+    private synchronized void receive() {
+
+        while (true) {
+            Object obj = null;
+            System.out.println("waiting to receive");
+            try {
+                obj = receive.readObject();
+            System.out.println(" receive ses");
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+
+            if (obj instanceof Response response) {
+                // Check if it's a response to a previous request
+                if (response.getRequestId() != null) {
+                    System.out.println("response: " + response.getRequestId());
+                    ResponseManager.complete(response.getRequestId(), response);
+                } else {
+                    // It’s a real-time event (e.g., chat message)
+
+                    handleRealtimeMessage(obj);
                 }
             }
         }
+
     }
-//
-//    public synchronized void sendMessage(String receiver, String message) {
-//        String type="MSG";
-//        this.request = "MSG\n" +
-//                receiver+"\n" +
-//                message+"\n";
-//        notify();
-//
-//    }
-//    public synchronized void login(String phone, String password) {
-//        String type="LOGIN";
-//        request = "LOGIN\n" +
-//                phone+"\n" +
-//                password+"\n";
-//        notify();
-//
-//    }
+
+
+    private synchronized void handleRealtimeMessage(Object o) {
+        Platform.runLater(() -> {
+            if (chatController == null) {
+                System.err.println("ChatController is not initialized for real-time message handling.");
+                return;
+            }
+
+            if (o instanceof Message) {
+                Message msg = (Message) o;
+                ChatController.allChats.get(msg.getChatId()).addMessage(msg);
+                chatController.populateChatList();
+                if (ChatController.currentChatId == msg.getChatId()) {
+                    chatController.addMessageBubble(msg.getMessage(), false);
+                }
+            }
+
+            if (o instanceof Chat) {
+                Chat chat = (Chat) o;
+                ChatController.allChats.put(chat.getChatId(), chat);
+                ChatController.receiverMap.put(ReceiverPhone.get(chat), chat.getChatId());
+                SignedUser.chatList.add(chat.getChatId());
+                chatController.populateChatList();
+                if (ChatController.currentChatId == chat.getChatId()) {
+                    chatController.addMessageBubble(chat.getMessages().get(0).getMessage(), false);
+                }
+            }
+        });
+    }
+
 
     @Override
     public void run() {
+
         receive();
+
+
     }
 }
