@@ -1,0 +1,12 @@
+<<<<<<< HEAD
+Hasibul Hasan:+8801711001100:pass1234: //example.com:4:12:45:78:33:1:+8801922334455
+Ayesha Akter:+8801922334455:ayesha2025: //site.com:3:67:89:10:0:
+Rakib Khan:+8801300111222:rkhanpass: //rakib.net:4:5:15:25:35:1:+8801711001100
+Tanjila Rahman:+8801400222333:tanjiL@33: //tanji.dev:2:98:32:0:
+Sazzad Hossain:+8801500333444:sazzad2025: //sazzad.org:4:11:22:33:44:0:
+111:111:111::0:0
+=======
+Tafsir Al Nafin:+8801700645096:1234::0:0
+Tafsir:+8801742301161:ami::0:0
+Ami Nafin:+8801731365522:abc::0:0
+>>>>>>> 692b5893e9148286f1979b1161a6251f324509e2

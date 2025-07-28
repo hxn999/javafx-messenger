@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.Cursor?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="1000.0" stylesheets="@../styles/style.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.client.chat.ChatController">
+   <children>
+      <!-- Contacts pane -->
+      <VBox fx:id="contactsBox" layoutX="-4.0" layoutY="-2.0" prefHeight="610.0" prefWidth="347.0" styleClass="contact-list">
+         <children>
+
+            <HBox alignment="CENTER" prefHeight="57.0" prefWidth="342.0" style="-fx-spacing: 5;" styleClass="accent-color">
+               <children>
+                  <!-- Search icon -->
+                  <ImageView fx:id="searchIcon" fitHeight="27.0" fitWidth="27.0" onMouseClicked="#onSearchClicked" style="-fx-opacity: 0.5;">
+                     <image>
+                        <Image url="@../icons/icons8-search-40.png" />
+                     </image>
+                  </ImageView>
+
+                  <!-- Editable, focusable search field -->
+                  <TextField fx:id="searchField" editable="true" focusTraversable="false" onAction="#onSearchClicked" prefHeight="46.0" prefWidth="250.0" promptText="Search Contact (e.g. 017XXXXXXXXX" style="-fx-text-fill: black;" />
+
+                  <!-- Clear icon (“×”), show/hide in controller -->
+                  <ImageView fx:id="clearSearch" fitHeight="35.0" fitWidth="35.0" onMouseClicked="#onClearSearchClicked" pickOnBounds="true" style="-fx-translate-x: -40px;">
+                     <cursor>
+                        <Cursor fx:constant="HAND" />
+                     </cursor>
+                     <image>
+                        <Image url="@../icons/icons8-cancel-50.png" />
+                     </image>
+                  </ImageView>
+
+               </children>
+            </HBox>
+
+            <ScrollPane prefHeight="487.0" prefWidth="342.0">
+               <content>
+                  <!-- Dynamic chat list -->
+                  <VBox fx:id="chatList" prefHeight="482.0" prefWidth="338.0">
+                     <!-- Entries will be populated dynamically -->
+                  </VBox>
+               </content>
+            </ScrollPane>
+            <HBox alignment="CENTER_LEFT" prefHeight="62.0" prefWidth="342.0" style="-fx-spacing: 40;" styleClass="accent-color">
+               <children>
+                  <ImageView fx:id="userImage" fitHeight="50.0" fitWidth="50.0" pickOnBounds="true" preserveRatio="true" styleClass="user-img">
+                     <HBox.margin>
+                        <Insets left="20.0" />
+                     </HBox.margin>
+                  </ImageView>
+                  <Label fx:id="userName" styleClass="name-text" text="Hasibul Hasan" textFill="WHITE" />
+                  <Button fx:id="settingsButton" mnemonicParsing="false" styleClass="settings-icon-btn">
+                     <graphic>
+                        <ImageView fitHeight="42.0" fitWidth="44.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@../icons/gear_8.png" />
+                           </image>
+                        </ImageView>
+                     </graphic>
+                  </Button>
+               </children>
+            </HBox>
+         </children>
+      </VBox>
+
+      <!-- Message input bar -->
+      <HBox alignment="CENTER" layoutX="341.0" layoutY="545.0" prefHeight="58.0" prefWidth="662.0" style="-fx-background-color: #3b4ef7; -fx-spacing: 30;">
+         <children>
+            <ImageView fx:id="sendIcon" fitHeight="35.0" fitWidth="35.0" styleClass="send-btn">
+               <image>
+                  <Image url="@../icons/icons8-photo-30.png" />
+               </image>
+            </ImageView>
+            <TextField fx:id="messageField" prefHeight="37.0" prefWidth="457.0" promptText="Write here..." style="-fx-background-color: #596bf6;" styleClass="search-input" />
+
+            <Button fx:id="sendButton" onAction="#onSendClicked" prefHeight="35.0" prefWidth="35.0" styleClass="send-btn">
+               <graphic>
+                  <ImageView fitHeight="35.0" fitWidth="35.0">
+                     <image>
+                        <Image url="@../icons/icons8-telegram-app-50.png" />
+                     </image>
+                  </ImageView>
+               </graphic>
+            </Button>
+
+         </children></HBox>
+
+      <!-- Header bar -->
+      <HBox alignment="CENTER_LEFT" layoutX="343.0" prefHeight="58.0" prefWidth="662.0" style="-fx-background-color: #3b4ef7;">
+         <children>
+            <HBox alignment="CENTER" prefHeight="58.0" prefWidth="212.0">
+               <children>
+                  <ImageView fx:id="receiverImage" fitHeight="34.0" fitWidth="37.0">
+                     <image>
+                        <Image url="@../icons/icons8-avatar-80.png" />
+                     </image>
+                  </ImageView>
+                  <Label fx:id="receiverName" alignment="CENTER" prefHeight="25.0" prefWidth="131.0" style="-fx-text-fill: #ffffff;" text="Tafsif Al nafin" textFill="WHITE">
+                     <font>
+                        <Font name="System Bold" size="16.0" />
+                     </font>
+                  </Label>
+               </children>
+            </HBox>
+            <Button fx:id="dotsButton" onAction="#onDotsClicked" prefHeight="40.0" prefWidth="40.0" styleClass="dots-btn">
+               <graphic>
+                  <ImageView fitHeight="30.0" fitWidth="30.0">
+                     <image>
+                        <Image url="@../icons/icons8-dots-30.png" />
+                     </image>
+                  </ImageView>
+               </graphic>
+               <HBox.margin>
+                  <Insets left="400.0" />
+               </HBox.margin>
+            </Button>
+            <Button fx:id="blockUserButton" layoutX="0" layoutY="0" onAction="#onBlockUserClicked" prefHeight="0" prefWidth="0" styleClass="block-user-btn" text="Block User" visible="false" />
+
+         </children>
+      </HBox>
+
+      <!-- Messages view -->
+      <ScrollPane fx:id="messageScrollPane" layoutX="344.0" layoutY="59.0" prefHeight="486.0" prefWidth="656.0">
+         <content>
+            <VBox fx:id="messageContainer" alignment="BOTTOM_RIGHT" prefHeight="483.0" prefWidth="646.0">
+               <!-- Bubbles added here -->
+            </VBox>
+         </content>
+      </ScrollPane>
+   </children>
+</AnchorPane>
