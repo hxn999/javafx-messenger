@@ -17,14 +17,14 @@ public class ResponseManager {
      */
     public static void register(String requestId, CompletableFuture<Response> future) {
         if (requestId == null || future == null) {
-            System.err.println("❌ Cannot register null request ID or future");
+            System.err.println("Cannot register null request ID or future");
             return;
         }
 
         pending.put(requestId, future);
         requestTimestamps.put(requestId, System.currentTimeMillis());
 
-        System.out.println("📝 Registered request: " + requestId + " (Total pending: " + pending.size() + ")");
+        System.out.println("Registered request: " + requestId + " (Total pending: " + pending.size() + ")");
 
         // Set up timeout handling
         future.orTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
@@ -34,7 +34,7 @@ public class ResponseManager {
                     requestTimestamps.remove(requestId);
 
                     if (throwable != null) {
-                        System.err.println("⏰ Request timed out or failed: " + requestId);
+                        System.err.println("Request timed out or failed: " + requestId);
                     }
                 });
     }
@@ -44,7 +44,7 @@ public class ResponseManager {
      */
     public static void complete(String requestId, Response response) {
         if (requestId == null) {
-            System.err.println("❌ Cannot complete request with null ID");
+            System.err.println("Cannot complete request with null ID");
             return;
         }
 
@@ -53,15 +53,14 @@ public class ResponseManager {
 
         if (future != null) {
             if (response != null) {
-                System.out.println("✅ Completing request: " + requestId +
-                        " with status: " + response.getStatusCode());
+                System.out.println("Completing request: " + requestId + " with status: " + response.getStatusCode());
                 future.complete(response);
             } else {
-                System.err.println("❌ Received null response for request: " + requestId);
+                System.err.println("Received null response for request: " + requestId);
                 future.completeExceptionally(new RuntimeException("Received null response"));
             }
         } else {
-            System.err.println("⚠️ No pending request found for ID: " + requestId);
+            System.err.println("No pending request found for ID: " + requestId);
             System.err.println("   Current pending requests: " + pending.keySet());
         }
     }
@@ -89,7 +88,7 @@ public class ResponseManager {
 
         if (future != null) {
             boolean cancelled = future.cancel(true);
-            System.out.println("🚫 Cancelled request: " + requestId + " (success: " + cancelled + ")");
+            System.out.println("Cancelled request: " + requestId + " (success: " + cancelled + ")");
             return cancelled;
         }
         return false;
@@ -111,7 +110,7 @@ public class ResponseManager {
                 if (future != null) {
                     future.completeExceptionally(new RuntimeException("Request timed out"));
                 }
-                System.out.println("🧹 Cleaned up old request: " + requestId);
+                System.out.println("Cleaned up old request: " + requestId);
                 return true;
             }
             return false;
@@ -132,7 +131,7 @@ public class ResponseManager {
      * Clear all pending requests (use with caution)
      */
     public static void clearAll() {
-        System.out.println("🧹 Clearing all pending requests: " + pending.size());
+        System.out.println("Clearing all pending requests: " + pending.size());
         pending.forEach((id, future) -> {
             future.completeExceptionally(new RuntimeException("Cleared by system"));
         });

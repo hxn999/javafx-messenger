@@ -262,22 +262,22 @@ public class ClientHandler {
 
                 // Log what type of response we're sending
                 if (responseObj.isIsMessage()) {
-                    System.out.println("📤 Real-time message sent to client - RequestID: " + responseObj.getRequestId());
+                    System.out.println("Real-time message sent to client RequestID: " + responseObj.getRequestId());
                 } else {
-                    System.out.println("📤 RPC response sent to client - RequestID: " + responseObj.getRequestId());
+                    System.out.println("RPC response sent to client RequestID: " + responseObj.getRequestId());
                 }
 
             } catch (IOException e) {
-                System.err.println("❌ Failed to send response to client: " + e.getMessage());
+                System.err.println("Failed to send response to client: " + e.getMessage());
                 // Mark this connection as problematic
                 throw e; // Re-throw so caller can handle cleanup
             }
         } else {
             if (response == null) {
-                System.err.println("❌ Cannot send - ObjectOutputStream is null");
+                System.err.println("Cannot send ObjectOutputStream is null");
             }
             if (responseObj == null) {
-                System.err.println("❌ Cannot send - Response object is null");
+                System.err.println("Cannot send Response object is null");
             }
         }
     }
@@ -292,7 +292,7 @@ public class ClientHandler {
         if (obj instanceof Response) {
             sendToClient((Response) obj);
         } else {
-            System.err.println("⚠️ Warning: sendToClient called with non-Response object: " +
+            System.err.println("Warning: sendToClient called with non-Response object: " +
                     (obj != null ? obj.getClass().getSimpleName() : "null"));
 
             if (response != null && obj != null) {
@@ -308,7 +308,7 @@ public class ClientHandler {
             Response serverResponse = new Response("server", body, statusCode, clientResponse.getRequestId());
             sendToClient(serverResponse);
         } catch (IOException e) {
-            System.err.println("❌ Failed to send response: " + e.getMessage());
+            System.err.println("Failed to send response: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -376,16 +376,16 @@ public class ClientHandler {
 
     private void messageSend() {
         try {
-            System.out.println("📨 Message send request received: " + clientResponse.getRequestId());
+            System.out.println(" Message send request received: " + clientResponse.getRequestId());
             Message msg = (Message) clientResponse.getBody();
 
             if (msg == null) {
-                System.err.println("❌ Received null message");
+                System.err.println("Received null message");
                 response.writeObject(new Response(500, clientResponse.getRequestId()));
                 return;
             }
 
-            System.out.println("📝 Processing message: '" + msg.getMessage() + "' from " +
+            System.out.println(" Processing message: '" + msg.getMessage() + "' from " +
                     msg.getSender() + " to " + msg.getReceiver());
 
             // checking if user is blocked or not
@@ -393,7 +393,7 @@ public class ClientHandler {
             if (mUser.isPresent()) {
                 User user = mUser.get();
                 if (user.isBlocked(msg.getSender())) {
-                    System.out.println("🚫 Message blocked - receiver has blocked sender");
+                    System.out.println("Message blocked receiver has blocked sender");
                     response.writeObject(new Response(500, clientResponse.getRequestId()));
                     return;
                 }
@@ -406,7 +406,7 @@ public class ClientHandler {
 
             // if its the starting of the chat
             if (msg.isFirstMsg()) {
-                System.out.println("🆕 Creating new chat - first message");
+                System.out.println("Creating new chat - first message");
                 ref.chat = Chat.createChat(msg.getSender(), msg.getReceiver());
                 ref.isNewChat = true;
 
@@ -425,13 +425,13 @@ public class ClientHandler {
 
                 // Set the chat ID for the message
                 msg.setChatId(ref.chat.getChatId());
-                System.out.println("✅ New chat created with ID: " + ref.chat.getChatId());
+                System.out.println("New chat created with ID: " + ref.chat.getChatId());
             } else {
-                System.out.println("📬 Adding to existing chat ID: " + msg.getChatId());
+                System.out.println("Adding to existing chat ID: " + msg.getChatId());
                 ref.chat = Chat.findChat(msg.getChatId());
                 ref.isNewChat = false;
                 if (ref.chat == null) {
-                    System.err.println("❌ Chat not found for ID: " + msg.getChatId());
+                    System.err.println(" Chat not found for ID: " + msg.getChatId());
                     response.writeObject(new Response(500, clientResponse.getRequestId()));
                     return;
                 }
@@ -439,23 +439,23 @@ public class ClientHandler {
 
             // Add message to chat
             ref.chat.addMessage(msg);
-            System.out.println("📝 Message added to chat. Total messages: " + ref.chat.getMessages().size());
+            System.out.println(" Message added to chat. Total messages: " + ref.chat.getMessages().size());
 
             // Send response back to sender (this is the RPC response)
             Response senderResponse = new Response("server", ref.chat, 200, clientResponse.getRequestId(), false);
             response.writeObject(senderResponse);
-            System.out.println("📤 Response sent to sender");
+            System.out.println(" Response sent to sender");
 
             // Send real-time message to receiver with appropriate data
             sendRealtimeMessage(msg, ref.chat, ref.isNewChat);
 
         } catch (Exception e) {
-            System.err.println("❌ Error in messageSend: " + e.getMessage());
+            System.err.println(" Error in messageSend: " + e.getMessage());
             e.printStackTrace();
             try {
                 response.writeObject(new Response(500, clientResponse.getRequestId()));
             } catch (IOException ioException) {
-                System.err.println("❌ Failed to send error response: " + ioException.getMessage());
+                System.err.println(" Failed to send error response: " + ioException.getMessage());
             }
         }
     }
@@ -468,51 +468,51 @@ public class ClientHandler {
             ClientHandler receiverHandler = handlerMap.get(receiverSocket);
             if (receiverHandler != null) {
                 try {
-                    System.out.println("📤 Preparing real-time message for receiver: " + msg.getReceiver());
-                    System.out.println("📝 Message content: " + msg.getMessage());
+                    System.out.println(" Preparing real-time message for receiver: " + msg.getReceiver());
+                    System.out.println(" Message content: " + msg.getMessage());
 
                     Response realtimeResponse;
 
                     if (isNewChat) {
                         // For new chat, send the entire chat object
-                        System.out.println("💬 Sending new chat with ID: " + chat.getChatId());
+                        System.out.println(" Sending new chat with ID: " + chat.getChatId());
                         realtimeResponse = new Response("server", chat, 200,
                                 UUID.randomUUID().toString(), true);
                     } else {
                         // For existing chat, send only the message
-                        System.out.println("📝 Sending message to existing chat: " + chat.getChatId());
+                        System.out.println(" Sending message to existing chat: " + chat.getChatId());
                         realtimeResponse = new Response("server", msg, 200,
                                 UUID.randomUUID().toString(), true);
                     }
 
                     // Send to receiver
                     receiverHandler.sendToClient(realtimeResponse);
-                    System.out.println("✅ Real-time message sent successfully to: " + msg.getReceiver());
+                    System.out.println(" Real-time message sent successfully to: " + msg.getReceiver());
 
                 } catch (IOException e) {
-                    System.err.println("❌ Failed to send real-time message to receiver: " + msg.getReceiver());
-                    System.err.println("❌ Error details: " + e.getMessage());
+                    System.err.println(" Failed to send real-time message to receiver: " + msg.getReceiver());
+                    System.err.println(" Error details: " + e.getMessage());
                     e.printStackTrace();
 
                     // Remove the corrupted socket from maps
                     clientMap.remove(msg.getReceiver());
                     handlerMap.remove(receiverSocket);
 
-                    System.out.println("🧹 Cleaned up corrupted connection for: " + msg.getReceiver());
+                    System.out.println(" Cleaned up corrupted connection for: " + msg.getReceiver());
                 }
             } else {
-                System.out.println("⚠️ Receiver handler not found for: " + msg.getReceiver());
-                System.out.println("📊 Available handlers: " + handlerMap.size());
+                System.out.println(" Receiver handler not found for: " + msg.getReceiver());
+                System.out.println(" Available handlers: " + handlerMap.size());
             }
         } else {
             if (receiverSocket == null) {
-                System.out.println("📴 Receiver not connected: " + msg.getReceiver());
+                System.out.println(" Receiver not connected: " + msg.getReceiver());
             } else {
-                System.out.println("🔌 Receiver socket closed: " + msg.getReceiver());
+                System.out.println(" Receiver socket closed: " + msg.getReceiver());
                 // Clean up closed socket
                 clientMap.remove(msg.getReceiver());
             }
-            System.out.println("👥 Online users: " + clientMap.keySet());
+            System.out.println(" Online users: " + clientMap.keySet());
         }
     }
 

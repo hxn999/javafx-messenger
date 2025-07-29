@@ -181,9 +181,9 @@ public class ChatController implements Initializable {
             // Process pending messages
             try {
                 Receiver.processPendingMessagesStatic(this);
-                System.out.println("✅ ChatController ready for real-time messages");
+                System.out.println("ChatController ready for real-time messages");
             } catch (Exception e) {
-                System.err.println("❌ Error processing pending messages: " + e.getMessage());
+                System.err.println("Error processing pending messages: " + e.getMessage());
             }
         });
 
@@ -223,7 +223,7 @@ public class ChatController implements Initializable {
                         return userRes;
                     });
                 } else {
-                    System.err.println("❌ Failed to fetch chat for chatId: " + chatId);
+                    System.err.println("Failed to fetch chat for chatId: " + chatId);
                     return CompletableFuture.completedFuture(res);
                 }
             });
@@ -258,7 +258,7 @@ public class ChatController implements Initializable {
             }
         }, 0, 3, TimeUnit.SECONDS); // Poll every 3 seconds
 
-        System.out.println("🔄 Global message polling started");
+        System.out.println("Global message polling started");
     }
 
     /**
@@ -338,7 +338,7 @@ public class ChatController implements Initializable {
             return;
         }
 
-        System.out.println("🚀 IMMEDIATE handling of incoming message from: " + senderPhone);
+        System.out.println("IMMEDIATE handling of incoming message from: " + senderPhone);
 
         // IMMEDIATE UI update - show sender name at top of chat list
         Platform.runLater(() -> {
@@ -373,7 +373,7 @@ public class ChatController implements Initializable {
                 // Create or update a temporary chat entry for immediate display
                 createTemporaryChatEntry(sender, message);
 
-                System.out.println("⚡ IMMEDIATE display update for existing user: " + sender.getName());
+                System.out.println("IMMEDIATE display update for existing user: " + sender.getName());
             } else {
                 // User doesn't exist, fetch info and then update
                 fetchSenderInfoAndUpdateImmediately(senderPhone, message);
@@ -405,7 +405,7 @@ public class ChatController implements Initializable {
                 // Highlight the sender's chat entry
                 highlightSenderInChatList(sender.getPhone());
 
-                System.out.println("✨ Temporary chat entry created for: " + sender.getName());
+                System.out.println("Temporary chat entry created for: " + sender.getName());
 
             } catch (Exception e) {
                 System.err.println("Error creating temporary chat entry: " + e.getMessage());
@@ -498,7 +498,7 @@ public class ChatController implements Initializable {
 
         // IMMEDIATELY show something in the UI
         Platform.runLater(() -> {
-            System.out.println("⚡ IMMEDIATE new chat indicator shown");
+            System.out.println("IMMEDIATE new chat indicator shown");
         });
 
         // First, fetch sender's user information
@@ -599,11 +599,11 @@ public class ChatController implements Initializable {
             showNewMessageNotification(chatId, chat);
         }
 
-        System.out.println("✅ New chat added from " + senderUser.getName() + " (" + senderPhone + ")");
+        System.out.println("New chat added from " + senderUser.getName() + " (" + senderPhone + ")");
     }
 
     private void createTemporaryChatForNewMessage(Message incomingMessage, User senderUser) {
-        System.out.println("📝 Creating temporary chat entry for message from " + senderUser.getName());
+        System.out.println("Creating temporary chat entry for message from " + senderUser.getName());
         refreshUserChatList();
     }
 
@@ -637,7 +637,7 @@ public class ChatController implements Initializable {
             String senderPhone = incomingMessage.getSender();
             highlightSenderInChatList(senderPhone);
 
-            System.out.println("⚡ IMMEDIATE chat list update for existing chat: " + chatId);
+            System.out.println("IMMEDIATE chat list update for existing chat: " + chatId);
         });
 
         // Then do the full chat update
@@ -671,7 +671,7 @@ public class ChatController implements Initializable {
                             showNewMessageNotification(chatId, updatedChat);
                         }
 
-                        System.out.println("✅ Full chat update completed for: " + chatId);
+                        System.out.println("Full chat update completed for: " + chatId);
                     });
                 }
             }
@@ -798,7 +798,7 @@ public class ChatController implements Initializable {
 
             if (sender != null && chat.getMessages() != null && !chat.getMessages().isEmpty()) {
                 Message lastMessage = chat.getMessages().get(chat.getMessages().size() - 1);
-                System.out.println("🔔 New message from " + sender.getName() + ": " + lastMessage.getMessage());
+                System.out.println("New message from " + sender.getName() + ": " + lastMessage.getMessage());
             }
         } catch (Exception e) {
             System.err.println("Error showing notification: " + e.getMessage());
@@ -817,7 +817,7 @@ public class ChatController implements Initializable {
             }
         }
         isGlobalPollingActive = false;
-        System.out.println("🛑 Global message polling stopped");
+        System.out.println("Global message polling stopped");
     }
 
     @FXML
@@ -1230,7 +1230,7 @@ public class ChatController implements Initializable {
         Platform.runLater(() -> {
             try {
                 populateChatList();
-                System.out.println("🔄 Forced immediate chat list update");
+                System.out.println("Forced immediate chat list update");
             } catch (Exception e) {
                 System.err.println("Error in forced update: " + e.getMessage());
             }

@@ -34,9 +34,9 @@ public class Receiver extends Thread {
 
         try {
             this.input = new ObjectInputStream(this.socket.getInputStream());
-            System.out.println("✅ Receiver initialized successfully for: " + name);
+            System.out.println("Receiver initialized successfully for: " + name);
         } catch (IOException e) {
-            System.err.println("❌ Failed to initialize ObjectInputStream: " + e.getMessage());
+            System.err.println("Failed to initialize ObjectInputStream: " + e.getMessage());
             throw new RuntimeException("Failed to initialize ObjectInputStream", e);
         }
     }
@@ -47,11 +47,11 @@ public class Receiver extends Thread {
             listenLoop();
         } catch (IOException e) {
             if (running) {
-                System.err.println("❌ Receiver connection error: " + e.getMessage());
+                System.err.println("Receiver connection error: " + e.getMessage());
                 e.printStackTrace();
             }
         } catch (ClassNotFoundException e) {
-            System.err.println("❌ Receiver class not found error: " + e.getMessage());
+            System.err.println("Receiver class not found error: " + e.getMessage());
             e.printStackTrace();
         } finally {
             cleanup();
@@ -61,41 +61,41 @@ public class Receiver extends Thread {
     private void listenLoop() throws IOException, ClassNotFoundException {
         while (running && !socket.isClosed()) {
             try {
-                System.out.println("👂 Waiting to receive message...");
+                System.out.println("Waiting to receive message...");
                 Object receivedObject = input.readObject();
 
                 if (receivedObject == null) {
-                    System.err.println("⚠️ Received null object");
+                    System.err.println("Received null object");
                     continue;
                 }
 
                 if (receivedObject instanceof Response) {
                     Response response = (Response) receivedObject;
 
-                    System.out.println("📨 Received Response:");
+                    System.out.println("Received Response:");
                     System.out.println("   - RequestID: " + response.getRequestId());
                     System.out.println("   - StatusCode: " + response.getStatusCode());
                     System.out.println("   - IsMessage: " + response.isIsMessage());
                     System.out.println("   - Sender: " + response.getSender());
 
                     if (response.isIsMessage()) {
-                        System.out.println("🔥 Processing real-time message...");
+                        System.out.println("Processing real-time message...");
                         handleRealtimeMessage(response);
                     } else {
-                        System.out.println("🔄 Processing RPC response...");
+                        System.out.println("Processing RPC response...");
                         ResponseManager.complete(response.getRequestId(), response);
                     }
                 } else if (receivedObject instanceof Chat) {
-                    System.out.println("💬 Received direct Chat object");
+                    System.out.println("Received direct Chat object");
                     Chat chat = (Chat) receivedObject;
                     handleDirectChatUpdate(chat);
                 } else {
-                    System.err.println("❌ Unexpected object type received: " + receivedObject.getClass().getName());
+                    System.err.println("Unexpected object type received: " + receivedObject.getClass().getName());
                 }
 
             } catch (IOException e) {
                 if (running) {
-                    System.err.println("❌ Error reading from socket: " + e.getMessage());
+                    System.err.println("Error reading from socket: " + e.getMessage());
                     throw e;
                 }
                 break;
@@ -114,25 +114,25 @@ public class Receiver extends Thread {
     // Replaced handleRealtimeMessage with enhanced version:
     private void handleRealtimeMessage(Response response) {
         if (response == null) {
-            System.err.println("❌ Received null response in handleRealtimeMessage");
+            System.err.println("Received null response in handleRealtimeMessage");
             return;
         }
 
         // Handle Chat object (existing logic)
         Chat incomingChat = response.getChat();
         if (incomingChat != null) {
-            System.out.println("📱 Processing real-time chat for chat ID: " + incomingChat.getChatId());
+            System.out.println("Processing real-time chat for chat ID: " + incomingChat.getChatId());
             Platform.runLater(() -> {
                 try {
                     if (chatController == null) {
-                        System.out.println("⏳ ChatController not ready, queuing chat for later processing");
+                        System.out.println("ChatController not ready, queuing chat for later processing");
                         pendingMessages.offer(new PendingRealTimeMessage(incomingChat, null, System.currentTimeMillis()));
                         return;
                     }
                     handleChatUpdate(incomingChat, chatController);
                     processPendingMessages();
                 } catch (Exception e) {
-                    System.err.println("❌ Error in handleRealtimeMessage (Chat): " + e.getMessage());
+                    System.err.println("Error in handleRealtimeMessage (Chat): " + e.getMessage());
                     e.printStackTrace();
                 }
             });
@@ -142,21 +142,21 @@ public class Receiver extends Thread {
         // Handle Message object directly
         Message incomingMessage = response.getMessage(); // Assuming Response has a getMessage() method
         if (incomingMessage != null) {
-            System.out.println("📨 Processing real-time message directly: '" + incomingMessage.getMessage() +
+            System.out.println("Processing real-time message directly: '" + incomingMessage.getMessage() +
                     "' from: " + incomingMessage.getSender() +
                     " to: " + incomingMessage.getReceiver());
 
             Platform.runLater(() -> {
                 try {
                     if (chatController == null) {
-                        System.out.println("⏳ ChatController not ready, queuing message for later processing");
+                        System.out.println("ChatController not ready, queuing message for later processing");
                         pendingMessages.offer(new PendingRealTimeMessage(null, incomingMessage, System.currentTimeMillis()));
                         return;
                     }
                     handleDirectMessage(incomingMessage, chatController);
                     processPendingMessages();
                 } catch (Exception e) {
-                    System.err.println("❌ Error in handleRealtimeMessage (Message): " + e.getMessage());
+                    System.err.println("Error in handleRealtimeMessage (Message): " + e.getMessage());
                     e.printStackTrace();
                 }
             });
@@ -167,7 +167,7 @@ public class Receiver extends Thread {
         Object bodyObject = response.getBody();
         if (bodyObject instanceof Chat) {
             Chat chat = (Chat) bodyObject;
-            System.out.println("📱 Processing real-time chat from body: " + chat.getChatId());
+            System.out.println("Processing real-time chat from body: " + chat.getChatId());
             Platform.runLater(() -> {
                 try {
                     if (chatController == null) {
@@ -177,13 +177,13 @@ public class Receiver extends Thread {
                     handleChatUpdate(chat, chatController);
                     processPendingMessages();
                 } catch (Exception e) {
-                    System.err.println("❌ Error processing chat from body: " + e.getMessage());
+                    System.err.println("Error processing chat from body: " + e.getMessage());
                     e.printStackTrace();
                 }
             });
         } else if (bodyObject instanceof Message) {
             Message message = (Message) bodyObject;
-            System.out.println("📨 Processing real-time message from body: '" + message.getMessage() + "'");
+            System.out.println("Processing real-time message from body: '" + message.getMessage() + "'");
             Platform.runLater(() -> {
                 try {
                     if (chatController == null) {
@@ -193,12 +193,12 @@ public class Receiver extends Thread {
                     handleDirectMessage(message, chatController);
                     processPendingMessages();
                 } catch (Exception e) {
-                    System.err.println("❌ Error processing message from body: " + e.getMessage());
+                    System.err.println("Error processing message from body: " + e.getMessage());
                     e.printStackTrace();
                 }
             });
         } else {
-            System.err.println("❌ Real-time response contains no Chat or Message object");
+            System.err.println("Real-time response contains no Chat or Message object");
             System.err.println("   - Chat: " + incomingChat);
             System.err.println("   - Body type: " + (bodyObject != null ? bodyObject.getClass().getName() : "null"));
         }
@@ -217,7 +217,7 @@ public class Receiver extends Thread {
 
         List<Message> incomingMessages = incomingChat.getMessages();
         if (incomingMessages == null || incomingMessages.isEmpty()) {
-            System.err.println("⚠️ No messages in incoming chat");
+            System.err.println("No messages in incoming chat");
             return;
         }
 
@@ -227,12 +227,12 @@ public class Receiver extends Thread {
                 ? existingChat.getMessages().size()
                 : 0;
 
-        System.out.println("📊 Existing messages: " + existingMessageCount +
+        System.out.println("Existing messages: " + existingMessageCount +
                 ", Incoming messages: " + incomingMessages.size());
 
         // Only process if there are actually new messages
         if (incomingMessages.size() <= existingMessageCount) {
-            System.out.println("ℹ️ No new messages to process");
+            System.out.println("No new messages to process");
             return;
         }
 
@@ -243,7 +243,7 @@ public class Receiver extends Thread {
         String receiverPhone = ReceiverPhone.get(incomingChat);
         if (receiverPhone != null) {
             ChatController.receiverMap.put(receiverPhone, incomingChat.getChatId());
-            System.out.println("🔗 Updated receiver map: " + receiverPhone + " -> " + incomingChat.getChatId());
+            System.out.println("Updated receiver map: " + receiverPhone + " -> " + incomingChat.getChatId());
         }
 
         // Add to signed user's chat list if not already present
@@ -252,13 +252,13 @@ public class Receiver extends Thread {
             SignedUser.chatList.add(0, incomingChat.getChatId()); // Add at the beginning
             SignedUser.saveToFile();
             isNewChat = true;
-            System.out.println("➕ Added NEW chat " + incomingChat.getChatId() + " to user's chat list");
+            System.out.println("Added NEW chat " + incomingChat.getChatId() + " to user's chat list");
         } else {
             // Move existing chat to the top
             SignedUser.chatList.remove(Integer.valueOf(incomingChat.getChatId()));
             SignedUser.chatList.add(0, incomingChat.getChatId());
             SignedUser.saveToFile();
-            System.out.println("📌 Moved chat " + incomingChat.getChatId() + " to top of list");
+            System.out.println("Moved chat " + incomingChat.getChatId() + " to top of list");
         }
 
         // Process NEW messages and immediately update UI
@@ -268,14 +268,14 @@ public class Receiver extends Thread {
         for (int i = existingMessageCount; i < incomingMessages.size(); i++) {
             Message newMsg = incomingMessages.get(i);
             if (newMsg == null) {
-                System.err.println("⚠️ Null message at index " + i);
+                System.err.println("Null message at index " + i);
                 continue;
             }
 
             hasNewMessages = true;
             latestMessage = newMsg; // Keep track of the latest message
 
-            System.out.println("📨 NEW real-time message: '" + newMsg.getMessage() +
+            System.out.println("NEW real-time message: '" + newMsg.getMessage() +
                     "' from: " + newMsg.getSender() +
                     " to: " + newMsg.getReceiver());
 
@@ -291,9 +291,9 @@ public class Receiver extends Thread {
                     // Highlight the chat with new message
                     highlightChatWithNewMessage(incomingChat.getChatId(), controller);
 
-                    System.out.println("🔄 IMMEDIATE chat list update completed for: " + newMsg.getSender());
+                    System.out.println("IMMEDIATE chat list update completed for: " + newMsg.getSender());
                 } catch (Exception e) {
-                    System.err.println("❌ Error in immediate chat list update: " + e.getMessage());
+                    System.err.println("Error in immediate chat list update: " + e.getMessage());
                 }
             });
 
@@ -302,7 +302,7 @@ public class Receiver extends Thread {
                     ChatController.currentChatId.equals(incomingChat.getChatId())) {
 
                 boolean isIncomingMessage = !newMsg.getSender().equals(SignedUser.phone);
-                System.out.println("👀 Adding message bubble - isIncoming: " + isIncomingMessage);
+                System.out.println("Adding message bubble - isIncoming: " + isIncomingMessage);
 
                 Platform.runLater(() -> {
                     controller.addMessageBubble(newMsg.getMessage(), !isIncomingMessage);
@@ -331,7 +331,7 @@ public class Receiver extends Thread {
             });
         }
 
-        System.out.println("✅ Real-time message processing completed with immediate UI updates");
+        System.out.println("Real-time message processing completed with immediate UI updates");
     }
 
 
@@ -344,7 +344,7 @@ public class Receiver extends Thread {
         String receiver = incomingMessage.getReceiver();
         String chatPartner = sender.equals(SignedUser.phone) ? receiver : sender;
 
-        System.out.println("🔍 Processing direct message for chat partner: " + chatPartner);
+        System.out.println("Processing direct message for chat partner: " + chatPartner);
 
         // 1. Find or create chat
         Integer chatId = ChatController.receiverMap.get(chatPartner);
@@ -352,7 +352,7 @@ public class Receiver extends Thread {
 
         if (chatId != null && ChatController.allChats.containsKey(chatId)) {
             targetChat = ChatController.allChats.get(chatId);
-            System.out.println("📝 Found existing chat ID: " + chatId);
+            System.out.println("Found existing chat ID: " + chatId);
         }
 
 
@@ -367,7 +367,7 @@ public class Receiver extends Thread {
 
             SignedUser.chatList.remove(Integer.valueOf(chatId));
             SignedUser.chatList.add(0, chatId);
-            System.out.println("📌 Moved chat to top of user's list");
+            System.out.println("Moved chat to top of user's list");
 
         SignedUser.saveToFile();
 
@@ -386,7 +386,7 @@ public class Receiver extends Thread {
             showNewMessageToast(incomingMessage, chatId, controller);
         });
 
-        System.out.println("✅ Direct message processed for chat ID: " + chatId);
+        System.out.println("Direct message processed for chat ID: " + chatId);
     }
 
 
@@ -414,7 +414,7 @@ public class Receiver extends Thread {
 
                         // Refresh chat list again with complete user info
                         Platform.runLater(controller::populateChatList);
-                        System.out.println("✅ Sender user info fetched and chat list refreshed");
+                        System.out.println("Sender user info fetched and chat list refreshed");
                     }
                 }
             });
@@ -437,7 +437,7 @@ public class Receiver extends Thread {
                     }
                 }
 
-                System.out.println("🔔 ENHANCED notification - New message from " + senderName + ": " + message.getMessage());
+                System.out.println("ENHANCED notification - New message from " + senderName + ": " + message.getMessage());
 
                 // You can add system tray notification here if needed
                 // showSystemTrayNotification(senderName, message.getMessage());
@@ -466,7 +466,7 @@ public class Receiver extends Thread {
             }
 
             // Create a simple toast notification
-            System.out.println("💬 TOAST: New message from " + senderName);
+            System.out.println("TOAST: New message from " + senderName);
 
             // You can implement actual toast UI here
             // For now, just ensure the chat list prominently shows the sender
@@ -482,7 +482,7 @@ public class Receiver extends Thread {
             try {
                 // This will be handled by the enhanced populateChatList method
                 // which checks for recent activity and highlights accordingly
-                System.out.println("🎯 Highlighting chat " + chatId + " for new message");
+                System.out.println("Highlighting chat " + chatId + " for new message");
             } catch (Exception e) {
                 System.err.println("Error highlighting chat: " + e.getMessage());
             }
@@ -494,7 +494,7 @@ public class Receiver extends Thread {
         try {
             // You can update the window title to indicate new messages
             // This would require access to the Stage object
-            System.out.println("📝 Window title would be updated for new message");
+            System.out.println("Window title would be updated for new message");
         } catch (Exception e) {
             System.err.println("Error updating window title: " + e.getMessage());
         }
@@ -514,7 +514,7 @@ public class Receiver extends Thread {
                         .ifPresent(user -> System.out.println("🔔 New message from " + user.getName() + ": " + message.getMessage()));
             }
 
-            System.out.println("🔔 New background message in chat " + chatId + ": " + message.getMessage());
+            System.out.println("New background message in chat " + chatId + ": " + message.getMessage());
 
         } catch (Exception e) {
             System.err.println("Error showing notification: " + e.getMessage());
@@ -530,17 +530,17 @@ public class Receiver extends Thread {
 
         while ((pending = pendingMessages.poll()) != null) {
             try {
-                System.out.println("🔄 Processing queued message from " +
+                System.out.println("Processing queued message from " +
                         (System.currentTimeMillis() - pending.timestamp) + "ms ago");
                 handleChatUpdate(pending.chat, chatController);
                 processedCount++;
             } catch (Exception e) {
-                System.err.println("❌ Error processing queued message: " + e.getMessage());
+                System.err.println("Error processing queued message: " + e.getMessage());
             }
         }
 
         if (processedCount > 0) {
-            System.out.println("✅ Processed " + processedCount + " queued messages");
+            System.out.println("Processed " + processedCount + " queued messages");
         }
     }
 
@@ -555,7 +555,7 @@ public class Receiver extends Thread {
 
             while ((pending = pendingMessages.poll()) != null) {
                 try {
-                    System.out.println("🔄 Processing static queued message from " +
+                    System.out.println("Processing static queued message from " +
                             (System.currentTimeMillis() - pending.timestamp) + "ms ago");
 
                     // Create a temporary receiver instance to use the handleChatUpdate method
@@ -563,12 +563,12 @@ public class Receiver extends Thread {
                     processQueuedChat(pending.chat, controller);
                     processedCount++;
                 } catch (Exception e) {
-                    System.err.println("❌ Error processing static queued message: " + e.getMessage());
+                    System.err.println("Error processing static queued message: " + e.getMessage());
                 }
             }
 
             if (processedCount > 0) {
-                System.out.println("✅ Processed " + processedCount + " static queued messages");
+                System.out.println("Processed " + processedCount + " static queued messages");
             }
         });
     }
@@ -608,7 +608,7 @@ public class Receiver extends Thread {
                 socket.close();
             }
         } catch (IOException e) {
-            System.err.println("❌ Error closing receiver socket: " + e.getMessage());
+            System.err.println("Error closing receiver socket: " + e.getMessage());
         }
     }
 
@@ -618,9 +618,9 @@ public class Receiver extends Thread {
                 input.close();
             }
         } catch (IOException e) {
-            System.err.println("❌ Error closing input stream: " + e.getMessage());
+            System.err.println("Error closing input stream: " + e.getMessage());
         }
-        System.out.println("🧹 Receiver cleanup completed");
+        System.out.println("Receiver cleanup completed");
     }
 
     /**
