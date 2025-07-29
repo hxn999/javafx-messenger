@@ -45,12 +45,10 @@
             </HBox>
 
             <ScrollPane prefHeight="487.0" prefWidth="342.0">
-               <content>
-                  <!-- Dynamic chat list -->
-                  <VBox fx:id="chatList" prefHeight="482.0" prefWidth="338.0">
-                     <!-- Entries will be populated dynamically -->
-                  </VBox>
-               </content>
+               <!-- Dynamic chat list -->
+               <VBox fx:id="chatList" prefHeight="482.0" prefWidth="338.0">
+                  <!-- Entries will be populated dynamically -->
+               </VBox>
             </ScrollPane>
             <HBox alignment="CENTER_LEFT" prefHeight="62.0" prefWidth="342.0" style="-fx-spacing: 40;" styleClass="accent-color">
                <children>
@@ -106,7 +104,8 @@
                         <Image url="@../icons/icons8-avatar-80.png" />
                      </image>
                   </ImageView>
-                  <Label fx:id="receiverName" alignment="CENTER" prefHeight="25.0" prefWidth="131.0" style="-fx-text-fill: #ffffff;" text="Tafsif Al nafin" textFill="WHITE">
+                  <Label fx:id="receiverName" alignment="CENTER" prefHeight="25.0" prefWidth="131.0" style="-fx-text-fill: #ffffff;"
+                         textFill="WHITE">
                      <font>
                         <Font name="System Bold" size="16.0" />
                      </font>

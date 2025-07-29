@@ -33,7 +33,19 @@ public class Chat implements Serializable {
 
     // Add message to a chat
     public void addMessage(Message message) {
+        if (message == null) {
+            System.err.println("❌ Attempted to add null message to chat " + chatId);
+            return;
+        }
+
+        if (messages == null) {
+            messages = new ArrayList<>();
+        }
+
         messages.add(message);
+        System.out.println("📝 Added message to chat " + chatId + ": " + message.getMessage());
+        System.out.println("📊 Chat now has " + messages.size() + " messages");
+
         saveAllChats();
     }
 
@@ -87,7 +99,7 @@ public class Chat implements Serializable {
         }
     }
 
-    // Optional: Print messages (for debugging)
+//    // Optional: Print messages (for debugging)
     public void printMessages() {
         for (Message msg : messages) {
             System.out.println("[" + msg.getTimestamp() + "] " +
@@ -95,4 +107,10 @@ public class Chat implements Serializable {
                     msg.getMessage());
         }
     }
+
+    // Add this method to Chat.java for better debugging
+
+
+    // Enhanced addMessage method with better logging
+
 }

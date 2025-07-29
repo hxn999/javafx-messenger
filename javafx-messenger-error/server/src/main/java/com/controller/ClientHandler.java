@@ -250,11 +250,66 @@ public class ClientHandler {
     }
 
 
+    /**
+     * Sends a Response object to this client
+     * This method is synchronized to prevent concurrent writes to the same stream
+     */
+    public synchronized void sendToClient(Response responseObj) throws IOException {
+        if (response != null && responseObj != null) {
+            try {
+                response.writeObject(responseObj);
+                response.flush();
+
+                // Log what type of response we're sending
+                if (responseObj.isIsMessage()) {
+                    System.out.println("📤 Real-time message sent to client - RequestID: " + responseObj.getRequestId());
+                } else {
+                    System.out.println("📤 RPC response sent to client - RequestID: " + responseObj.getRequestId());
+                }
+
+            } catch (IOException e) {
+                System.err.println("❌ Failed to send response to client: " + e.getMessage());
+                // Mark this connection as problematic
+                throw e; // Re-throw so caller can handle cleanup
+            }
+        } else {
+            if (response == null) {
+                System.err.println("❌ Cannot send - ObjectOutputStream is null");
+            }
+            if (responseObj == null) {
+                System.err.println("❌ Cannot send - Response object is null");
+            }
+        }
+    }
+
+
+    /**
+     * Legacy method for backward compatibility - converts Object to Response
+     * @deprecated Use sendToClient(Response) instead
+     */
+    @Deprecated
     public synchronized void sendToClient(Object obj) throws IOException {
-        if (response != null) {
-            response.writeObject(obj);
-//            System.out.println("Object Written Successfullyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy");
-            response.flush();
+        if (obj instanceof Response) {
+            sendToClient((Response) obj);
+        } else {
+            System.err.println("⚠️ Warning: sendToClient called with non-Response object: " +
+                    (obj != null ? obj.getClass().getSimpleName() : "null"));
+
+            if (response != null && obj != null) {
+                response.writeObject(obj);
+                response.flush();
+            }
+        }
+    }
+
+    // Overloaded version for sending objects
+    private void sendResponse(Object body, int statusCode) {
+        try {
+            Response serverResponse = new Response("server", body, statusCode, clientResponse.getRequestId());
+            sendToClient(serverResponse);
+        } catch (IOException e) {
+            System.err.println("❌ Failed to send response: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -321,82 +376,145 @@ public class ClientHandler {
 
     private void messageSend() {
         try {
-            System.out.println("Message send request received: " + clientResponse.getRequestId());
+            System.out.println("📨 Message send request received: " + clientResponse.getRequestId());
             Message msg = (Message) clientResponse.getBody();
+
+            if (msg == null) {
+                System.err.println("❌ Received null message");
+                response.writeObject(new Response(500, clientResponse.getRequestId()));
+                return;
+            }
+
+            System.out.println("📝 Processing message: '" + msg.getMessage() + "' from " +
+                    msg.getSender() + " to " + msg.getReceiver());
 
             // checking if user is blocked or not
             Optional<User> mUser = User.find(msg.getReceiver());
             if (mUser.isPresent()) {
                 User user = mUser.get();
                 if (user.isBlocked(msg.getSender())) {
-                    // receiver blocked user , nothing to send or save
+                    System.out.println("🚫 Message blocked - receiver has blocked sender");
                     response.writeObject(new Response(500, clientResponse.getRequestId()));
                     return;
                 }
             }
 
+            var ref = new Object() {
+                Chat chat = null;
+                boolean isNewChat = false;
+            };
+
             // if its the starting of the chat
-            Chat chat = null;
             if (msg.isFirstMsg()) {
-                System.out.println("first message");
-                chat = Chat.createChat(msg.getSender(), msg.getReceiver());
-                User.find(msg.getReceiver()).get().getChatList().add(chat.getChatId());
-                User.find(msg.getSender()).get().getChatList().add(chat.getChatId());
+                System.out.println("🆕 Creating new chat - first message");
+                ref.chat = Chat.createChat(msg.getSender(), msg.getReceiver());
+                ref.isNewChat = true;
+
+                // Add chat to both users' chat lists
+                User.find(msg.getReceiver()).ifPresent(receiver -> {
+                    if (!receiver.getChatList().contains(ref.chat.getChatId())) {
+                        receiver.getChatList().add(ref.chat.getChatId());
+                    }
+                });
+                User.find(msg.getSender()).ifPresent(sender -> {
+                    if (!sender.getChatList().contains(ref.chat.getChatId())) {
+                        sender.getChatList().add(ref.chat.getChatId());
+                    }
+                });
                 User.saveAllToFile();
 
-                response.writeObject(new Response("server", chat, 200, clientResponse.getRequestId()));
-                msg.setChatId(chat.getChatId());
+                // Set the chat ID for the message
+                msg.setChatId(ref.chat.getChatId());
+                System.out.println("✅ New chat created with ID: " + ref.chat.getChatId());
+            } else {
+                System.out.println("📬 Adding to existing chat ID: " + msg.getChatId());
+                ref.chat = Chat.findChat(msg.getChatId());
+                ref.isNewChat = false;
+                if (ref.chat == null) {
+                    System.err.println("❌ Chat not found for ID: " + msg.getChatId());
+                    response.writeObject(new Response(500, clientResponse.getRequestId()));
+                    return;
+                }
             }
 
-            if (!msg.isFirstMsg()) {
-                System.out.println("not first message");
-                chat = Chat.findChat(msg.getChatId());
-            }
+            // Add message to chat
+            ref.chat.addMessage(msg);
+            System.out.println("📝 Message added to chat. Total messages: " + ref.chat.getMessages().size());
 
-            assert chat != null;
-            chat.addMessage(msg);
-            response.writeObject(new Response("server", chat, 200, clientResponse.getRequestId(), true));
+            // Send response back to sender (this is the RPC response)
+            Response senderResponse = new Response("server", ref.chat, 200, clientResponse.getRequestId(), false);
+            response.writeObject(senderResponse);
+            System.out.println("📤 Response sent to sender");
 
-            // Send real-time message to receiver - FIXED VERSION
-            sendRealtimeMessage(msg, chat);
+            // Send real-time message to receiver with appropriate data
+            sendRealtimeMessage(msg, ref.chat, ref.isNewChat);
 
         } catch (Exception e) {
-            System.err.println("Error in messageSend: " + e.getMessage());
+            System.err.println("❌ Error in messageSend: " + e.getMessage());
             e.printStackTrace();
             try {
                 response.writeObject(new Response(500, clientResponse.getRequestId()));
             } catch (IOException ioException) {
-                ioException.printStackTrace();
+                System.err.println("❌ Failed to send error response: " + ioException.getMessage());
             }
         }
     }
 
-    // Fixed method to send real-time messages to receiver
-    private void sendRealtimeMessage(Message msg, Chat chat) {
-            Socket receiverSocket = clientMap.get(msg.getReceiver());
+    // Modified method to send appropriate data based on whether it's a new chat or existing chat
+    private void sendRealtimeMessage(Message msg, Chat chat, boolean isNewChat) {
+        Socket receiverSocket = clientMap.get(msg.getReceiver());
 
-            if (receiverSocket != null && !receiverSocket.isClosed()) {
-                ClientHandler receiverHandler = handlerMap.get(receiverSocket);
-                if (receiverHandler != null) {
-                    try {
-                        System.out.println("Thre msg isssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss " + msg.getMessage());
-                        // Always send chat object
-                        receiverHandler.sendToClient(chat);
-                        System.out.println("Real-time message sent to receiver: " + msg.getReceiver());
-                    } catch (IOException e) {
-                        System.err.println("Failed to send real-time message to receiver: " + msg.getReceiver());
-                        e.printStackTrace();
-                        // Remove the corrupted socket from maps
-                        clientMap.remove(msg.getReceiver());
-                        handlerMap.remove(receiverSocket);
+        if (receiverSocket != null && !receiverSocket.isClosed()) {
+            ClientHandler receiverHandler = handlerMap.get(receiverSocket);
+            if (receiverHandler != null) {
+                try {
+                    System.out.println("📤 Preparing real-time message for receiver: " + msg.getReceiver());
+                    System.out.println("📝 Message content: " + msg.getMessage());
+
+                    Response realtimeResponse;
+
+                    if (isNewChat) {
+                        // For new chat, send the entire chat object
+                        System.out.println("💬 Sending new chat with ID: " + chat.getChatId());
+                        realtimeResponse = new Response("server", chat, 200,
+                                UUID.randomUUID().toString(), true);
+                    } else {
+                        // For existing chat, send only the message
+                        System.out.println("📝 Sending message to existing chat: " + chat.getChatId());
+                        realtimeResponse = new Response("server", msg, 200,
+                                UUID.randomUUID().toString(), true);
                     }
-                } else {
-                    System.out.println("Receiver handler not found: " + msg.getReceiver());
+
+                    // Send to receiver
+                    receiverHandler.sendToClient(realtimeResponse);
+                    System.out.println("✅ Real-time message sent successfully to: " + msg.getReceiver());
+
+                } catch (IOException e) {
+                    System.err.println("❌ Failed to send real-time message to receiver: " + msg.getReceiver());
+                    System.err.println("❌ Error details: " + e.getMessage());
+                    e.printStackTrace();
+
+                    // Remove the corrupted socket from maps
+                    clientMap.remove(msg.getReceiver());
+                    handlerMap.remove(receiverSocket);
+
+                    System.out.println("🧹 Cleaned up corrupted connection for: " + msg.getReceiver());
                 }
             } else {
-                System.out.println("Receiver not online: " + msg.getReceiver());
+                System.out.println("⚠️ Receiver handler not found for: " + msg.getReceiver());
+                System.out.println("📊 Available handlers: " + handlerMap.size());
             }
+        } else {
+            if (receiverSocket == null) {
+                System.out.println("📴 Receiver not connected: " + msg.getReceiver());
+            } else {
+                System.out.println("🔌 Receiver socket closed: " + msg.getReceiver());
+                // Clean up closed socket
+                clientMap.remove(msg.getReceiver());
+            }
+            System.out.println("👥 Online users: " + clientMap.keySet());
         }
+    }
 
     // Cache ObjectOutputStream per socket to avoid stream corruption
     public synchronized void sendToReceiver(Object obj) {
